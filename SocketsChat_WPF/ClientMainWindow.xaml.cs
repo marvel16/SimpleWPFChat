@@ -13,16 +13,23 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace SocketsChatServer
+namespace SocketsChat_WPF
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for ClientMainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class ClientMainWindow : Window
     {
-        public MainWindow()
+        public ClientMainWindow()
         {
             InitializeComponent();
+        }
+
+
+        
+        private void ConnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            
         }
     }
 }

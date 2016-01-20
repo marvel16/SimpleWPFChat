@@ -1,20 +1,22 @@
-﻿<Window x:Class="SocketsChatServer.MainWindow"
+﻿<Window x:Class="SocketsChatServer.ServerMainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SocketsChatServer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="ServerMainWindow" Height="350" Width="525">
     <Grid>
         <DockPanel LastChildFill="True">
             <TextBox DockPanel.Dock="Bottom"
                 Margin="4"
                 AcceptsTab="True"
                 />
-            <RichTextBox x:Name="messageBox"
-                Margin="4"
-                IsReadOnly="True"/>
+            <ListView x:Name="messageBox" Margin="4" ItemsSource="{Binding MessageList}">
+                <ListView.ItemTemplate>
+                    
+                </ListView.ItemTemplate>
+            </ListView>
         </DockPanel>
     </Grid>
 </Window>
