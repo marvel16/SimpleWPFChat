@@ -12,9 +12,11 @@
                 Margin="4"
                 AcceptsTab="True"
                 />
-            <ListView x:Name="messageBox" Margin="4" ItemsSource="{Binding MessageList}">
+            <ListView x:Name="messageBox" Margin="4" ItemsSource="{Binding UserMessages}">
                 <ListView.ItemTemplate>
-                    
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Message}"></TextBlock>
+                    </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
         </DockPanel>
