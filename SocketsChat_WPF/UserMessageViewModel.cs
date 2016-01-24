@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +15,7 @@ namespace SocketsChat_WPF
         private string _messageTime = String.Empty;
         private string _message = String.Empty;
         private string _status = String.Empty;
-
+        private string _command = String.Empty;
 
         public string Message
         {
@@ -51,7 +53,18 @@ namespace SocketsChat_WPF
             }
         }
 
-        
+        public string Command
+        {
+            get { return _command; }
+            set
+            {
+                if (_command == value)
+                    return;
+                _command = value;
+                OnPropertyChanged(Command);
+            }
+        }
+
         public string MessageTime
         {
             get { return _messageTime; }
@@ -70,9 +83,27 @@ namespace SocketsChat_WPF
     {
         public ObservableCollection<UserMessageViewModel> UserMessages { set; get; }
 
-        public UserMessagesViewModel(List<UserMessageViewModel> messages)
+        private UserMessageViewModel ConvertMessageDataToViewModel(MessageData msgData)
         {
-            UserMessages = new ObservableCollection<UserMessageViewModel>(messages);
+            return  new UserMessageViewModel()
+            {
+                Message = msgData.Message,
+                Command = msgData.CmdCommand.ToString(),
+                Id = msgData.Id.ToString(),
+                Status = msgData.Status.ToString(),
+                MessageTime = msgData.MessageTime.ToString(CultureInfo.InvariantCulture),
+            };
+        }
+
+        public UserMessagesViewModel(ObservableCollection<MessageData> messages)
+        {
+            messages.CollectionChanged += (o, e) =>
+            {
+                if (e?.NewItems?.Count == 0)
+                    return;
+                foreach (MessageData item in e.NewItems.Cast<MessageData>())
+                    UserMessages.Add(ConvertMessageDataToViewModel(item));
+            };
         }
     }
 }

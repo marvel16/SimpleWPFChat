@@ -1,10 +1,14 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using SocketsChat_WPF.Annotations;
 
 namespace SocketsChat_WPF
 {
@@ -98,7 +102,12 @@ namespace SocketsChat_WPF
 
     public class Client
     {
-        Socket
+        Socket clientSocket;
+
+        public ObservableCollection<MessageData> Messages { get; set; }
+
+        
+
     }
 
 }
