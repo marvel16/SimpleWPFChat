@@ -48,9 +48,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\SocketsChatServer\SocketsChatServer.csproj">
       <Project>{de82cc12-153c-401b-ba06-e0fa1745fc4c}</Project>
       <Name>SocketsChatServer</Name>
@@ -59,6 +56,9 @@
       <Project>{fb5c5c6c-7bc4-41bc-8ba8-768b74e00c06}</Project>
       <Name>SocketsChat_WPF</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
