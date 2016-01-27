@@ -24,7 +24,7 @@ namespace SocketsChat_WPF
             };
 
             ClientMainWindow view = new ClientMainWindow();
-            view.DataContext = new UserMessagesViewModel(msgs);
+            //view.DataContext = new UserMessagesViewModel();
             view.Show();
         }
     }

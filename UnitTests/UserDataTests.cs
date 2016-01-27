@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using SocketsChat_WPF;
-
+using CustomNetworkExtensions;
 
 namespace UnitTests
 {
@@ -31,7 +32,10 @@ namespace UnitTests
                 MessageTime = DateTime.MinValue,
             };
 
-            var convertedMessage = new MessageData(expectedMessage.ToBytes());
+
+            byte[] bytes = expectedMessage.ToByteArray();
+            var convertedMessage = bytes.ByteArrayToObject() as MessageData;
+
             Assert.That(expectedMessage.Message, Is.EqualTo(convertedMessage.Message));
             Assert.That(expectedMessage.UserName, Is.EqualTo(convertedMessage.UserName));
             Assert.That(expectedMessage.Id, Is.EqualTo(convertedMessage.Id));
@@ -52,7 +56,10 @@ namespace UnitTests
                 MessageTime = DateTime.MinValue,
             };
 
-            var convertedMessage = new MessageData(expectedMessage.ToBytes());
+
+            byte[] bytes = expectedMessage.ToByteArray();
+            var convertedMessage = bytes.ByteArrayToObject() as MessageData;
+
             Assert.That(expectedMessage.Message, Is.EqualTo(convertedMessage.Message));
             Assert.That(expectedMessage.UserName, Is.EqualTo(convertedMessage.UserName));
             Assert.That(expectedMessage.Id, Is.EqualTo(convertedMessage.Id));

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketsChatServer", "Socket
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{575ADA31-E8D8-4F9A-838F-4DBE37C8865F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkExtensions", "NetworkExtensions\NetworkExtensions.csproj", "{A07649BB-2358-4466-9168-91B591F87C93}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{575ADA31-E8D8-4F9A-838F-4DBE37C8865F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{575ADA31-E8D8-4F9A-838F-4DBE37C8865F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{575ADA31-E8D8-4F9A-838F-4DBE37C8865F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A07649BB-2358-4466-9168-91B591F87C93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A07649BB-2358-4466-9168-91B591F87C93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A07649BB-2358-4466-9168-91B591F87C93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A07649BB-2358-4466-9168-91B591F87C93}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

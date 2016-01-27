@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CustomNetworkExtensions;
 
 namespace SocketsChat_WPF
 {
@@ -83,9 +84,15 @@ namespace SocketsChat_WPF
     {
         public ObservableCollection<UserMessageViewModel> UserMessages { set; get; }
 
+        public void OnMessageDataReceived(MessageData message)
+        {
+            UserMessages.Add(ConvertMessageDataToViewModel(message));
+        }
+
+
         private UserMessageViewModel ConvertMessageDataToViewModel(MessageData msgData)
         {
-            return  new UserMessageViewModel()
+            return new UserMessageViewModel()
             {
                 Message = msgData.Message,
                 Command = msgData.CmdCommand.ToString(),
@@ -95,15 +102,6 @@ namespace SocketsChat_WPF
             };
         }
 
-        public UserMessagesViewModel(ObservableCollection<MessageData> messages)
-        {
-            messages.CollectionChanged += (o, e) =>
-            {
-                if (e?.NewItems?.Count == 0)
-                    return;
-                foreach (MessageData item in e.NewItems.Cast<MessageData>())
-                    UserMessages.Add(ConvertMessageDataToViewModel(item));
-            };
-        }
+        
     }
 }

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace SocketsChat_WPF.Properties
+namespace CustomNetworkExtensions.Properties
 {
 
 

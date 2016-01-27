@@ -6,7 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using SocketsChat_WPF.Annotations;
+using CustomNetworkExtensions.Annotations;
 
 namespace SocketsChat_WPF
 {
