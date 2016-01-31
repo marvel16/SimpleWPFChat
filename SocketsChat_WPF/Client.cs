@@ -34,7 +34,7 @@ namespace SocketsChat_WPF
             byte[] messageBytes = new byte[len];
             await Stream?.ReadAsync(messageBytes, 0, len);
 
-            return (MessageData)messageBytes.ByteArrayToObject();
+            return (MessageData)messageBytes.ByteArrayToMessage();
         }
 
         public async Task WriteMessage(MessageData message)

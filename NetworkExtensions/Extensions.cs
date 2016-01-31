@@ -86,7 +86,7 @@ namespace CustomNetworkExtensions
             return bytes.ToArray();
         }
 
-        public static object ByteArrayToObject(this byte[] bytes)
+        public static MessageData ByteArrayToMessage(this byte[] bytes)
         {
             var memStream = new MemoryStream();
             var binForm = new BinaryFormatter();
@@ -95,7 +95,7 @@ namespace CustomNetworkExtensions
             var obj = binForm.Deserialize(memStream);
             memStream.Close();
 
-            return obj;
+            return (MessageData)obj;
         }
     }
 
