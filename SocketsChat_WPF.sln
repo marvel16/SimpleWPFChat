@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\Unit
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkExtensions", "NetworkExtensions\NetworkExtensions.csproj", "{A07649BB-2358-4466-9168-91B591F87C93}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerConsole", "ServerConsole\ServerConsole.csproj", "{EEA91477-88D8-4ED1-9D58-487C8D53B47A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{A07649BB-2358-4466-9168-91B591F87C93}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A07649BB-2358-4466-9168-91B591F87C93}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A07649BB-2358-4466-9168-91B591F87C93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEA91477-88D8-4ED1-9D58-487C8D53B47A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEA91477-88D8-4ED1-9D58-487C8D53B47A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEA91477-88D8-4ED1-9D58-487C8D53B47A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEA91477-88D8-4ED1-9D58-487C8D53B47A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
