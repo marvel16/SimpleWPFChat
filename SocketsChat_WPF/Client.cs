@@ -24,24 +24,32 @@ namespace SocketsChat_WPF
             _Client = new TcpClient();
 
             await _Client.ConnectAsync(ip, port);
+
+            Connected?.Invoke();
         }
 
-        public async Task<MessageData> ReadMessage()
+        public async Task<MessageData> ReadMessageAsync()
         {
-            byte[] messageLength = new byte[sizeof(int)];
-            await Stream?.ReadAsync(messageLength, 0, messageLength.Length);
-            int len = BitConverter.ToInt32(messageLength, 0);
-            byte[] messageBytes = new byte[len];
-            await Stream?.ReadAsync(messageBytes, 0, len);
+            int headerLength = sizeof (int);
+            byte[] header = await Stream?.ReadMessageFromStreamAsync(headerLength);
 
-            return (MessageData)messageBytes.ByteArrayToMessage();
+            int messageLength = BitConverter.ToInt32(header, 0);
+            byte[] message = await Stream?.ReadMessageFromStreamAsync(messageLength);
+
+            return message.ByteArrayToMessage();
         }
 
-        public async Task WriteMessage(MessageData message)
+
+        
+
+        public async Task WriteMessageAsync(MessageData message)
         {
             byte[] bytes = message.ToByteArray();
             Stream?.WriteAsync(bytes, 0, bytes.Length);
+
         }
+
+        
         
     }
 }

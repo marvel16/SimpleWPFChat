@@ -97,6 +97,20 @@ namespace CustomNetworkExtensions
 
             return (MessageData)obj;
         }
+
+        public static async Task<byte[]> ReadMessageFromStreamAsync(this NetworkStream stream, int messageLength)
+        {
+            if(stream == null)
+                throw new Exception("Stream is null");
+            if(messageLength < 1)
+                throw new Exception("Impossible to read 0 or less bytes");
+
+            byte[] bytes = new byte[messageLength];
+            int readPos = 0;
+            while (readPos < sizeof(int))
+                readPos += await stream?.ReadAsync(bytes, readPos, bytes.Length - readPos);
+            return bytes;
+        }
     }
 
 
