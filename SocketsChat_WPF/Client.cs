@@ -15,8 +15,8 @@ namespace SocketsChat_WPF
         private TcpClient _Client;
 
         private NetworkStream Stream => _Client?.GetStream();
-
-        public event Action Connected;
+        public event Action<MessageData> MessageReceived;
+        public event Action<Client> Connected;
 
         public async Task Connect(string ip, int port)
         {
@@ -25,18 +25,28 @@ namespace SocketsChat_WPF
 
             await _Client.ConnectAsync(ip, port);
 
-            Connected?.Invoke();
+            Connected?.Invoke(this);
         }
 
         public async Task<MessageData> ReadMessageAsync()
         {
-            int headerLength = sizeof (int);
-            byte[] header = await Stream?.ReadMessageFromStreamAsync(headerLength);
+            if (Stream == null)
+                throw new Exception("ReadMessageAsync(): Stream is null.");
+            MessageData msg = null;
+            while (_Client.Connected)
+            {
+                int headerLength = sizeof(int);
+                byte[] header = await Stream.ReadMessageFromStreamAsync(headerLength);
 
-            int messageLength = BitConverter.ToInt32(header, 0);
-            byte[] message = await Stream?.ReadMessageFromStreamAsync(messageLength);
+                int messageLength = BitConverter.ToInt32(header, 0);
+                byte[] message = await Stream.ReadMessageFromStreamAsync(messageLength);
 
-            return message.ByteArrayToMessage();
+                msg = message.ByteArrayToMessage();
+                MessageReceived?.Invoke(msg);
+            }
+            
+
+            return msg;
         }
 
 
@@ -44,8 +54,10 @@ namespace SocketsChat_WPF
 
         public async Task WriteMessageAsync(MessageData message)
         {
+            if(Stream == null)
+                throw new Exception("WriteMessageAsync() : Stream is null");
             byte[] bytes = message.ToByteArray();
-            Stream?.WriteAsync(bytes, 0, bytes.Length);
+            Stream.WriteAsync(bytes, 0, bytes.Length);
 
         }
 

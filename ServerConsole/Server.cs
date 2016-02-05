@@ -16,9 +16,7 @@ namespace ServerConsole
         static void Main(string[] args)
         {
             var server = new Srv();
-            
-
-
+            server.Start();
 
         }
         
@@ -35,15 +33,14 @@ namespace ServerConsole
 
         public Srv()
         {
-            var listenThread = new Thread(DoBeginAcceptTcpClient);
-            listenThread.Start();
+            
         }
 
         // Thread signal.
         private ManualResetEvent tcpClientConnected = new ManualResetEvent(false);
 
         // Accept one client connection asynchronously.
-        private void DoBeginAcceptTcpClient()
+        private void BeginAcceptTcpClient()
         {
             while (true)
             {
@@ -55,7 +52,7 @@ namespace ServerConsole
 
                 // Accept the connection. 
                 // BeginAcceptSocket() creates the accepted socket.
-                _listener.BeginAcceptTcpClient(DoAcceptTcpClientCallback, _listener);
+                _listener.BeginAcceptTcpClient(OnAcceptTcpClient, _listener);
 
                 // Wait until a connection is made and processed before 
                 // continuing.
@@ -64,7 +61,7 @@ namespace ServerConsole
         }
 
         // Process the client connection.
-        private async void DoAcceptTcpClientCallback(IAsyncResult ar)
+        private void OnAcceptTcpClient(IAsyncResult ar)
         {
             TcpListener listener = (TcpListener)ar.AsyncState;
             TcpClient client = listener.EndAcceptTcpClient(ar);
@@ -72,44 +69,49 @@ namespace ServerConsole
             _clients.TryAdd(new Guid(), client);
             Console.WriteLine("Client connected completed");
 
-           await ReadMessage(client);
+            ReadMessageAsync(client);
 
             // Signal the calling thread to continue.
             tcpClientConnected.Set();
         }
 
-        public async void ServerLoop()
+        public void Start()
         {
-            while (true)
-            {
-                ReadMessage(_clients.First().Value);
-                OnReadReceived.WaitOne();
-            }
+            _listener.Start();
+            //Thread thread = new Thread(BeginAcceptTcpClient);
+            //thread.Start();
+            BeginAcceptTcpClient();
         }
 
-        private async Task ReadMessage(TcpClient client)
+
+        public async Task<MessageData> ReadMessageAsync(TcpClient client)
         {
-            OnReadReceived.Reset();
-            byte[] messageLength = new byte[sizeof(int)];
-            try
+            if (client == null)
+                throw new Exception("ReadMessageAsync(): Client is null.");
+
+            var stream = client.GetStream();
+
+            MessageData msg = null;
+
+            while (client.Connected)
             {
-                var stream = client?.GetStream();
+                int headerLength = sizeof(int);
+                byte[] header = await stream.ReadMessageFromStreamAsync(headerLength);
 
-                await stream?.ReadAsync(messageLength, 0, messageLength.Length);
+                int messageLength = BitConverter.ToInt32(header, 0);
+                byte[] message = await stream.ReadMessageFromStreamAsync(messageLength);
 
-                int len = BitConverter.ToInt32(messageLength, 0);
-                byte[] messageBytes = new byte[len];
-
-                await stream?.ReadAsync(messageBytes, 0, len);
-
-                _messages.Enqueue(messageBytes.ByteArrayToMessage());
-                OnReadReceived.Set();
+                msg = message.ByteArrayToMessage();
+                Console.WriteLine(msg.Message);
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+
+
+            return msg;
         }
+
+
+
+
 
         private void OnReceiveHeader(IAsyncResult ar)
         {
