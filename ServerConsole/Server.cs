@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CustomNetworkExtensions;
 
+
 namespace ServerConsole
 {
     class Server
@@ -19,72 +20,58 @@ namespace ServerConsole
             server.Start();
 
         }
-        
 
     }
 
     class Srv
     {
         private readonly TcpListener _listener = new TcpListener(IPAddress.Any, 50000);
-
-        private ConcurrentDictionary<Guid, TcpClient> _clients = new ConcurrentDictionary<Guid, TcpClient>();
-        private ConcurrentQueue<MessageData> _messages = new ConcurrentQueue<MessageData>();
-        private ManualResetEvent OnReadReceived = new ManualResetEvent(false);
+        private ConcurrentDictionary<Guid, User> _clients = new ConcurrentDictionary<Guid, User>();
+        private ManualResetEvent tcpClientConnected = new ManualResetEvent(false);
+        private object sync = new object();
 
         public Srv()
         {
             
         }
 
-        // Thread signal.
-        private ManualResetEvent tcpClientConnected = new ManualResetEvent(false);
-
-        // Accept one client connection asynchronously.
-        private void BeginAcceptTcpClient()
-        {
-            while (true)
-            {
-                // Set the event to nonsignaled state.
-                tcpClientConnected.Reset();
-
-                // Start to listen for connections from a client.
-                Console.WriteLine("Waiting for a connection...");
-
-                // Accept the connection. 
-                // BeginAcceptSocket() creates the accepted socket.
-                _listener.BeginAcceptTcpClient(OnAcceptTcpClient, _listener);
-
-                // Wait until a connection is made and processed before 
-                // continuing.
-                tcpClientConnected.WaitOne();
-            }
-        }
-
-        // Process the client connection.
-        private void OnAcceptTcpClient(IAsyncResult ar)
-        {
-            TcpListener listener = (TcpListener)ar.AsyncState;
-            TcpClient client = listener.EndAcceptTcpClient(ar);
-
-            _clients.TryAdd(new Guid(), client);
-            Console.WriteLine("Client connected completed");
-
-            ReadMessageAsync(client);
-
-            // Signal the calling thread to continue.
-            tcpClientConnected.Set();
-        }
 
         public void Start()
         {
             _listener.Start();
-            //Thread thread = new Thread(BeginAcceptTcpClient);
-            //thread.Start();
-            BeginAcceptTcpClient();
+
+            while (true)
+            {
+                tcpClientConnected.Reset();
+                try
+                {
+                    AcceptTcpClientAsync();
+                }
+                catch (Exception e)
+                {
+                    WriteLine(e.ToString());
+                }
+                tcpClientConnected.WaitOne();
+
+            }
         }
 
+        private async Task AcceptTcpClientAsync()
+        {
+            WriteLine("Waiting for a connection...");
 
-        public async Task<MessageData> ReadMessageAsync(TcpClient client)
+            TcpClient client = await _listener.AcceptTcpClientAsync();
+
+            var user = new User(client);
+            _clients.TryAdd(user.Id, user);
+            WriteLine("New client connected...");
+
+            tcpClientConnected.Set();
+
+            ReadMessageAsync(client);
+        }
+
+        private async Task<MessageData> ReadMessageAsync(TcpClient client)
         {
             if (client == null)
                 throw new Exception("ReadMessageAsync(): Client is null.");
@@ -102,28 +89,75 @@ namespace ServerConsole
                 byte[] message = await stream.ReadMessageFromStreamAsync(messageLength);
 
                 msg = message.ByteArrayToMessage();
-                Console.WriteLine(msg.Message);
-            }
+                ProcessMessage(msg);
 
+
+            }
 
             return msg;
         }
 
-
-
-
-
-        private void OnReceiveHeader(IAsyncResult ar)
+        void ProcessMessage(MessageData msg)
         {
-            try
+            switch (msg.CmdCommand)
             {
-                TcpClient client = (TcpClient) ar.AsyncState;
+                case MessageData.Command.Login:
+                    
+                    break;
+                case MessageData.Command.ChangeName:
+                    break;
+                case MessageData.Command.Message:
+                    WriteLine(msg.Message);
+                    Broadcast(msg);
+                    break;
+                case MessageData.Command.List:
+                    ReturnUserList(msg);
+                    break;
+                case MessageData.Command.Logout:
+                default:
+                    RemoveClient(msg);
+                    break;
+            }
 
-            }
-            catch (Exception e)
+        }
+
+        private void Broadcast(MessageData msg)
+        {
+            foreach (var client in _clients.Where(client => client.Key != msg.Id))
             {
-                Console.WriteLine(e);
+                WriteMessage(client.Value.Client, msg);
             }
+        }
+
+        private void ReturnUserList(MessageData msg)
+        {
+            Guid id = msg.Id;
+            string name = msg.UserName;
+
+            string usersList = string.Join(String.Empty, _clients.Where(u => u.Key != id).Select(user => $"{user.Value.Name},"));
+            
+            var responce = new MessageData()
+            {
+                Id = id,
+                Message = usersList,
+                UserName = name,
+                CmdCommand = MessageData.Command.List,
+                MessageTime = DateTime.Now
+            };
+
+            WriteMessage(_clients[id].Client , responce);
+        }
+
+        private void RemoveClient(MessageData msg)
+        {
+            User user;
+            _clients.TryRemove(msg.Id, out user);
+            user.Client.Close();
+        }
+
+        private void WriteLine(string line)
+        {
+            Console.WriteLine($"[{DateTime.Now}]: {line}");
         }
 
         public async Task WriteMessage(TcpClient client, MessageData message)
@@ -131,7 +165,6 @@ namespace ServerConsole
             byte[] bytes = message.ToByteArray();
             var stream = client?.GetStream();
             stream?.WriteAsync(bytes, 0, bytes.Length);
-
         }
 
     }

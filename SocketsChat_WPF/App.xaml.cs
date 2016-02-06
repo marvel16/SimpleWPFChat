@@ -18,11 +18,13 @@ namespace SocketsChat_WPF
     {
         public void OnStartUp(object sender, StartupEventArgs e)
         {
-            Client client = new Client();
-            client.Connect("localhost", 50000);
-            client.Connected += OnConnected;
             ClientMainWindow view = new ClientMainWindow();
-            //view.DataContext = new UserMessagesViewModel();
+
+            Client client = new Client();
+            
+
+            view.DataContext = new UserMessagesViewModel(client);
+
             view.Show();
         }
 

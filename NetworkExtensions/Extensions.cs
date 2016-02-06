@@ -56,15 +56,29 @@ namespace CustomNetworkExtensions
             Login,
             //Logout of the server
             Logout,
-            //Send a text message to all the chat clients     
+            //Send a text message to all chat clients     
             Message,
             //Get a list of users in the chat room from the server
-            List
+            List,
+            ChangeName
         }
 
         //public MessageData() {}
 
 
+    }
+
+    public class User
+    {
+        public string Name{ get; set; }
+        public Guid Id { get; }
+        public TcpClient Client { get; }
+        public User(TcpClient client)
+        {
+            Name = String.Empty;
+            Id = new Guid();
+            Client = client;
+        }
     }
 
     public static class TcpExtensions

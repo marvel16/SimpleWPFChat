@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using CustomNetworkExtensions;
 
 namespace SocketsChat_WPF
@@ -82,7 +83,17 @@ namespace SocketsChat_WPF
 
     public class UserMessagesViewModel
     {
+        private Client _client;
         public ObservableCollection<UserMessageViewModel> UserMessages { set; get; }
+
+        public SendCommand Send;
+
+        public UserMessagesViewModel(Client client)
+        {
+            _client = client;
+            _client.MessageReceived += OnMessageDataReceived;
+            _client.Connect("localhost", 50000);
+        }
 
         public void OnMessageDataReceived(MessageData message)
         {
@@ -103,5 +114,22 @@ namespace SocketsChat_WPF
         }
 
         
+    }
+
+    public class SendCommand : ICommand
+    {
+        public Action SendAction;
+
+        public bool CanExecute(object parameter)
+        {
+            
+        }
+
+        public void Execute(object parameter)
+        {
+            var client = (Client) parameter;
+        }
+
+        public event EventHandler CanExecuteChanged;
     }
 }
