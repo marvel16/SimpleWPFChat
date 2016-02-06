@@ -121,7 +121,7 @@ namespace CustomNetworkExtensions
 
             byte[] bytes = new byte[messageLength];
             int readPos = 0;
-            while (readPos < sizeof(int))
+            while (readPos < messageLength)
                 readPos += await stream?.ReadAsync(bytes, readPos, bytes.Length - readPos);
             return bytes;
         }
