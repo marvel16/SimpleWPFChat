@@ -82,6 +82,19 @@ namespace SocketsChat_WPF
                 OnPropertyChanged();
             }
         }
+
+        private string _userName;
+        public string UserName
+        {
+            get { return _userName; }
+            set
+            {
+                if (value == _userName)
+                    return;
+                _userName = value;
+                OnPropertyChanged();
+            }
+        }
     }
 
     public class ClientViewModel : BaseViewModel
@@ -142,8 +155,6 @@ namespace SocketsChat_WPF
                 ConnectCmd?.OnAddressChanged();
             }
         }
-
-        public string UserName => _client.UserName;
 
         #region Commands
 
@@ -217,6 +228,7 @@ namespace SocketsChat_WPF
                 Id = msgData.Id.ToString(),
                 Status = msgData.Status.ToString(),
                 MessageTime = msgData.MessageTime.ToShortTimeString(),
+                UserName = _client.UserName,
             };
         }
 

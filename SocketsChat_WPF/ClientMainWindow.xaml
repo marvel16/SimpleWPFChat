@@ -33,15 +33,15 @@
                     Margin="4"
                     AcceptsTab="True" FontSize="13.333"/>
             </DockPanel>
-            <ListView x:Name="messageBox" Margin="8,4,8,4" ItemsSource="{Binding UserMessages}">
+            <ListView x:Name="messageBox" Margin="8,4,8,4" ItemsSource="{Binding UserMessages, Mode=OneWay}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <TextBlock>
-                            <Run Text="{Binding Source=MessageTime}"/>
+                            <Run Text="{Binding MessageTime}"/>
                             <Run Foreground="DarkTurquoise" Text="["/>
-                            <Run Foreground="DarkTurquoise" Text="{Binding Source=UserName}"/>
+                            <Run Foreground="DarkTurquoise" Text="{Binding UserName}"/>
                             <Run Foreground="DarkTurquoise" Text="]: "/>
-                            <Run Text="{Binding Source=Message}"/>
+                            <Run Text="{Binding Message}"/>
                         </TextBlock>
                     </DataTemplate>
                 </ListView.ItemTemplate>
