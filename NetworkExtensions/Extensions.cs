@@ -72,8 +72,8 @@ namespace CustomNetworkExtensions
         public TcpClient Client { get; }
         public User(TcpClient client)
         {
-            Name = $"User{counter}";
-            Id = new Guid();
+            Name = $"User{counter++}";
+            Id = Guid.NewGuid();
             Client = client;
         }
     }

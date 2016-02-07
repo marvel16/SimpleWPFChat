@@ -31,7 +31,7 @@ namespace SocketsChat_WPF
                 if (_message == value)
                     return;
                 _message = value;
-                OnPropertyChanged(Message);
+                OnPropertyChanged();
             }
         }
 
@@ -43,7 +43,7 @@ namespace SocketsChat_WPF
                 if (_message == value)
                     return;
                 _id = value;
-                OnPropertyChanged(Id);
+                OnPropertyChanged();
             }
         }
 
@@ -55,7 +55,7 @@ namespace SocketsChat_WPF
                 if (_status == value)
                     return;
                 _status = value;
-                OnPropertyChanged(Status);
+                OnPropertyChanged();
             }
         }
 
@@ -67,7 +67,7 @@ namespace SocketsChat_WPF
                 if (_command == value)
                     return;
                 _command = value;
-                OnPropertyChanged(Command);
+                OnPropertyChanged();
             }
         }
 
@@ -79,11 +79,9 @@ namespace SocketsChat_WPF
                 if (_messageTime == value)
                     return;
                 _messageTime = value;
-                OnPropertyChanged(MessageTime);
+                OnPropertyChanged();
             }
         }
-
-        public string UserName { get; set; } = String.Empty;
     }
 
     public class ClientViewModel : BaseViewModel
@@ -100,7 +98,7 @@ namespace SocketsChat_WPF
                 if (value == _userList)
                     return;
                 _userList = value;
-                OnPropertyChanged(nameof(UserList));
+                OnPropertyChanged();
             }
         }
 
@@ -113,7 +111,7 @@ namespace SocketsChat_WPF
                 if (value == _messageText)
                     return;
                 _messageText = value;
-                OnPropertyChanged(MessageTextToSend);
+                OnPropertyChanged();
                 SendCmd?.OnTextChanged();
             }
         }
@@ -144,6 +142,8 @@ namespace SocketsChat_WPF
                 ConnectCmd?.OnAddressChanged();
             }
         }
+
+        public string UserName => _client.UserName;
 
         #region Commands
 
@@ -184,7 +184,6 @@ namespace SocketsChat_WPF
             };
 
             var msgItem = ConvertMessageDataToViewModel(msg);
-            msgItem.UserName = "You";
             UserMessages.Add(msgItem);
             MessageTextToSend = string.Empty;
             _client.WriteMessageAsync(msg);

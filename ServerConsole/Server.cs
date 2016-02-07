@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,11 +61,11 @@ namespace ServerConsole
         {
             WriteLine("Waiting for a connection...");
 
-            TcpClient client = await _listener.AcceptTcpClientAsync();
+            TcpClient client = await _listener.AcceptTcpClientAsync().ConfigureAwait(false);
 
             var user = new User(client);
             _clients.TryAdd(user.Id, user);
-            WriteLine("New client connected...");
+            WriteLine($"New client {user.Name} connected...");
 
             var response = new MessageData
             {
@@ -77,7 +78,7 @@ namespace ServerConsole
             WriteMessage(response);
 
             tcpClientConnected.Set();
-            ReadMessageAsync(client);
+            await ReadMessageAsync(client).ConfigureAwait(false);
         }
 
         
@@ -90,6 +91,7 @@ namespace ServerConsole
                     WriteMessage(msg);
                     break;
                 case MessageData.Command.ChangeName:
+                    ChangeName(msg);
                     break;
                 case MessageData.Command.Message:
                     WriteLine($"{_clients[msg.Id].Name}: {msg.Message}");
@@ -160,10 +162,10 @@ namespace ServerConsole
             Console.WriteLine($"[{DateTime.Now}]: {line}");
         }
 
-        private async Task<MessageData> ReadMessageAsync(TcpClient client)
+        private async Task ReadMessageAsync(TcpClient client)
         {
             if (client == null)
-                throw new Exception("ReadMessageAsync(): Client is null.");
+                throw new ArgumentNullException("TcpClient client");
 
             var stream = client.GetStream();
 
@@ -180,11 +182,9 @@ namespace ServerConsole
                 msg = message.ByteArrayToMessage();
                 ProcessMessage(msg);
             }
-
-            return msg;
         }
 
-        public async Task WriteMessage(MessageData msg)
+        public void WriteMessage(MessageData msg)
         {
             var client = _clients[msg.Id].Client;
             byte[] bytes = msg.ToByteArray();

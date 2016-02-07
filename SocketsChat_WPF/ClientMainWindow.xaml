@@ -37,11 +37,11 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <TextBlock>
-                            <Run Text="{Binding MessageTime}"/>
+                            <Run Text="{Binding Source=MessageTime}"/>
                             <Run Foreground="DarkTurquoise" Text="["/>
-                            <Run Foreground="DarkTurquoise" Text="{Binding UserName}"/>
+                            <Run Foreground="DarkTurquoise" Text="{Binding Source=UserName}"/>
                             <Run Foreground="DarkTurquoise" Text="]: "/>
-                            <Run Text="{Binding Message}"/>
+                            <Run Text="{Binding Source=Message}"/>
                         </TextBlock>
                     </DataTemplate>
                 </ListView.ItemTemplate>

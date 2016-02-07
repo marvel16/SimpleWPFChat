@@ -26,9 +26,9 @@ namespace SocketsChat_WPF
 
 
         [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string paramName = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(paramName));
         }
 
         private string _userName;
@@ -40,7 +40,7 @@ namespace SocketsChat_WPF
                 if (value == _userName)
                     return;
                 _userName = value;
-                OnPropertyChanged(UserName);
+                OnPropertyChanged();
             }
         }
 
@@ -50,14 +50,14 @@ namespace SocketsChat_WPF
             _client?.Close();
             _client = new TcpClient();
 
-            await _client.ConnectAsync(ip, port);
+            await _client.ConnectAsync(ip, port).ConfigureAwait(false);
 
             Connected?.Invoke(this);
-            ReadMessageAsync();
+            await ReadMessageAsync().ConfigureAwait(false);
         }
 
 
-        public async Task<MessageData> ReadMessageAsync()
+        public async Task ReadMessageAsync()
         {
             if (Stream == null)
                 throw new Exception("ReadMessageAsync(): Stream is null.");
@@ -65,17 +65,15 @@ namespace SocketsChat_WPF
             while (_client.Connected)
             {
                 int headerLength = sizeof(int);
-                byte[] header = await Stream.ReadMessageFromStreamAsync(headerLength);
+                byte[] header = await Stream.ReadMessageFromStreamAsync(headerLength).ConfigureAwait(false);
 
                 int messageLength = BitConverter.ToInt32(header, 0);
-                byte[] message = await Stream.ReadMessageFromStreamAsync(messageLength);
+                byte[] message = await Stream.ReadMessageFromStreamAsync(messageLength).ConfigureAwait(false);
 
                 msg = message.ByteArrayToMessage();
 
                 ProcessMessage(msg);
             }
-
-            return msg;
         }
 
         void ProcessMessage(MessageData msg)
@@ -85,6 +83,7 @@ namespace SocketsChat_WPF
                 case MessageData.Command.Login:
                     ClientGuid = msg.Id;
                     UserName = msg.Message;
+                    msg.Message = "Connected";
                     MessageReceived?.Invoke(msg);
                     break;
                 case MessageData.Command.ChangeName:
@@ -103,13 +102,13 @@ namespace SocketsChat_WPF
         }
 
 
-        public async Task WriteMessageAsync(MessageData message)
+        public async void WriteMessageAsync(MessageData message)
         {
             if (Stream == null)
                 throw new Exception("WriteMessageAsync() : Stream is null");
             message.Id = ClientGuid;
             byte[] bytes = message.ToByteArray();
-            Stream.WriteAsync(bytes, 0, bytes.Length);
+            await Stream.WriteAsync(bytes, 0, bytes.Length);
         }
 
         
