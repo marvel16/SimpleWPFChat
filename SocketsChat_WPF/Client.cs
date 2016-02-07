@@ -15,12 +15,15 @@ namespace SocketsChat_WPF
 {
     public class Client : INotifyPropertyChanged
     {
-        private TcpClient _client;
-
+        private TcpClient _client = new TcpClient();
+        private Guid ClientGuid { get; set; }
         private NetworkStream Stream => _client?.GetStream();
         public event Action<MessageData> MessageReceived;
         public event Action<Client> Connected;
         public event PropertyChangedEventHandler PropertyChanged;
+        public event Action<List<string>> UserListReceived;
+        public bool IsConnected => _client.Connected;
+
 
         [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
@@ -38,9 +41,9 @@ namespace SocketsChat_WPF
                     return;
                 _userName = value;
                 OnPropertyChanged(UserName);
-
             }
         }
+
 
         public async Task Connect(string ip, int port)
         {
@@ -52,6 +55,7 @@ namespace SocketsChat_WPF
             Connected?.Invoke(this);
             ReadMessageAsync();
         }
+
 
         public async Task<MessageData> ReadMessageAsync()
         {
@@ -70,7 +74,6 @@ namespace SocketsChat_WPF
 
                 ProcessMessage(msg);
             }
-            
 
             return msg;
         }
@@ -80,16 +83,18 @@ namespace SocketsChat_WPF
             switch (msg.CmdCommand)
             {
                 case MessageData.Command.Login:
-
+                    ClientGuid = msg.Id;
+                    UserName = msg.Message;
+                    MessageReceived?.Invoke(msg);
                     break;
                 case MessageData.Command.ChangeName:
-                    UserName = msg.UserName;
+                    UserName = msg.Error ? UserName : msg.Message;
                     break;
                 case MessageData.Command.Message:
                     MessageReceived?.Invoke(msg);
                     break;
                 case MessageData.Command.List:
-                    
+                    UserListReceived?.Invoke(msg.Message.Split(new [] {','}, StringSplitOptions.RemoveEmptyEntries).ToList());
                     break;
                 default:
                     break;
@@ -100,11 +105,11 @@ namespace SocketsChat_WPF
 
         public async Task WriteMessageAsync(MessageData message)
         {
-            if(Stream == null)
+            if (Stream == null)
                 throw new Exception("WriteMessageAsync() : Stream is null");
+            message.Id = ClientGuid;
             byte[] bytes = message.ToByteArray();
             Stream.WriteAsync(bytes, 0, bytes.Length);
-
         }
 
         

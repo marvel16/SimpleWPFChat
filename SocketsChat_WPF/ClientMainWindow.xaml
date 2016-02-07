@@ -3,35 +3,50 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SocketsChat_WPF"
         mc:Ignorable="d"
-        Title="ClientMainWindow" Height="355.178" Width="529.142">
+        Title="ClientMainWindow"  Height="340" Width="528"
+        MinWidth="528" MinHeight="340">
     <Grid>
-        
         <DockPanel LastChildFill="True">
             <WrapPanel Margin="4" DockPanel.Dock="Top" Height="35">
                 <Label Margin="4" Content="IP:"/>
-                <TextBox Margin="6" x:Name="IpTextBox" Width="100"/>
+                <TextBox Margin="6" x:Name="IpTextBox" Width="106" FontSize="13.333" Text="{Binding Ip, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"/>
                 <Label Margin="4" Content="Port:"/>
-                <TextBox Margin="6" x:Name="PortTextBox" Width="75"/>
+                <TextBox Margin="6" x:Name="PortTextBox" Width="77" FontSize="13.333" Text="{Binding Port, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"/>
                 <Button x:Name="ConnectButton"
                         Margin="10 4 4 4"
                         Width="75"
+                        Background="#FF8EBBD1"
                         Content="Connect"
-                        Click="ConnectButton_Click"/>
+                        Command="{Binding ConnectCmd}"
+                        />
             </WrapPanel>
-            
-            <TextBox DockPanel.Dock="Bottom"
-                Margin="4"
-                AcceptsTab="True"
-                />
-            <ListView x:Name="messageBox" Margin="4" ItemsSource="{Binding UserMessages}">
+            <DockPanel Margin="4" DockPanel.Dock="Bottom" >
+                <Button x:Name="SendButton"
+                        DockPanel.Dock="Right"
+                        Margin="4" Content="Send" Command="{Binding SendCmd}" Background="#FF8EBBD1" Height="52" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="80"/>
+                <TextBox x:Name="InputTextbox"
+                         TextWrapping="Wrap"
+                         Text="{Binding MessageTextToSend, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True"
+                    HorizontalContentAlignment="Stretch"
+                    Margin="4"
+                    AcceptsTab="True" FontSize="13.333"/>
+            </DockPanel>
+            <ListView x:Name="messageBox" Margin="8,4,8,4" ItemsSource="{Binding UserMessages}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Message}"></TextBlock>
+                        <TextBlock>
+                            <Run Text="{Binding MessageTime}"/>
+                            <Run Foreground="DarkTurquoise" Text="["/>
+                            <Run Foreground="DarkTurquoise" Text="{Binding UserName}"/>
+                            <Run Foreground="DarkTurquoise" Text="]: "/>
+                            <Run Text="{Binding Message}"/>
+                        </TextBlock>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+
         </DockPanel>
     </Grid>
 </Window>

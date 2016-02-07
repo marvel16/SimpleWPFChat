@@ -28,10 +28,6 @@ namespace CustomNetworkExtensions
         public Command CmdCommand { get; set; }
 
         /// <summary>
-        /// User name in chat
-        /// </summary>
-        public string UserName { get; set; } = String.Empty;
-        /// <summary>
         /// Chat message
         /// </summary>
         public string Message { get; set; } = String.Empty;
@@ -52,30 +48,31 @@ namespace CustomNetworkExtensions
 
         public enum Command
         {
+            //Send a text message to all chat clients     
+            Message,
             //Log into the server
             Login,
             //Logout of the server
             Logout,
-            //Send a text message to all chat clients     
-            Message,
             //Get a list of users in the chat room from the server
             List,
             ChangeName
         }
 
-        //public MessageData() {}
+        public bool Error { get; set; }
 
 
     }
 
     public class User
     {
+        private static int counter = 0;
         public string Name{ get; set; }
         public Guid Id { get; }
         public TcpClient Client { get; }
         public User(TcpClient client)
         {
-            Name = String.Empty;
+            Name = $"User{counter}";
             Id = new Guid();
             Client = client;
         }

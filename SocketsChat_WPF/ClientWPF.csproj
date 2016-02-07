@@ -58,7 +58,7 @@
     <Compile Include="Client.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="BaseViewModel.cs" />
-    <Compile Include="UserMessageViewModel.cs" />
+    <Compile Include="ClientViewModel.cs" />
     <Page Include="ClientMainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

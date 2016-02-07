@@ -21,16 +21,10 @@ namespace SocketsChat_WPF
             ClientMainWindow view = new ClientMainWindow();
 
             Client client = new Client();
-            
 
-            view.DataContext = new UserMessagesViewModel(client);
+            view.DataContext = new ClientViewModel(client);
 
             view.Show();
-        }
-
-        void OnConnected(Client client)
-        {
-            client.WriteMessageAsync(new MessageData() {Message = "Hello!"});
         }
     }
 

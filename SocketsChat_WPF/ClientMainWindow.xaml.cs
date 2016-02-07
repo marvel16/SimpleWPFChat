@@ -24,12 +24,5 @@ namespace SocketsChat_WPF
         {
             InitializeComponent();
         }
-
-
-        
-        private void ConnectButton_Click(object sender, RoutedEventArgs e)
-        {
-            
-        }
     }
 }

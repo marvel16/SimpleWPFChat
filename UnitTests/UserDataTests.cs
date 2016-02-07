@@ -28,7 +28,6 @@ namespace UnitTests
                 CmdCommand = MessageData.Command.Login,
                 Status = MessageData.UserStatus.Offline,
                 Message = "Hello",
-                UserName = "Marvel",
                 MessageTime = DateTime.MinValue,
             };
 
@@ -37,7 +36,6 @@ namespace UnitTests
             var convertedMessage = bytes.ByteArrayToMessage() as MessageData;
 
             Assert.That(expectedMessage.Message, Is.EqualTo(convertedMessage.Message));
-            Assert.That(expectedMessage.UserName, Is.EqualTo(convertedMessage.UserName));
             Assert.That(expectedMessage.Id, Is.EqualTo(convertedMessage.Id));
             Assert.That(expectedMessage.Status, Is.EqualTo(convertedMessage.Status));
             Assert.That(expectedMessage.CmdCommand, Is.EqualTo(convertedMessage.CmdCommand));
@@ -52,7 +50,6 @@ namespace UnitTests
                 CmdCommand = MessageData.Command.Login,
                 Status = MessageData.UserStatus.Offline,
                 Message = null,
-                UserName = "",
                 MessageTime = DateTime.MinValue,
             };
 
@@ -61,7 +58,6 @@ namespace UnitTests
             var convertedMessage = bytes.ByteArrayToMessage() as MessageData;
 
             Assert.That(expectedMessage.Message, Is.EqualTo(convertedMessage.Message));
-            Assert.That(expectedMessage.UserName, Is.EqualTo(convertedMessage.UserName));
             Assert.That(expectedMessage.Id, Is.EqualTo(convertedMessage.Id));
             Assert.That(expectedMessage.Status, Is.EqualTo(convertedMessage.Status));
             Assert.That(expectedMessage.CmdCommand, Is.EqualTo(convertedMessage.CmdCommand));
