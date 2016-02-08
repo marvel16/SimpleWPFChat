@@ -13,23 +13,17 @@ using CustomNetworkExtensions.Annotations;
 
 namespace SocketsChat_WPF
 {
-    public class Client : INotifyPropertyChanged
+    public class Client
     {
         private TcpClient _client = new TcpClient();
         private Guid ClientGuid { get; set; }
         private NetworkStream Stream => _client?.GetStream();
         public event Action<MessageData> MessageReceived;
-        public event Action<Client> Connected;
-        public event PropertyChangedEventHandler PropertyChanged;
         public event Action<List<string>> UserListReceived;
+        public event Action<string,string> UserNameChanged;
         public bool IsConnected => _client.Connected;
 
 
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string paramName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(paramName));
-        }
 
         private string _userName;
         public string UserName
@@ -39,8 +33,9 @@ namespace SocketsChat_WPF
             {
                 if (value == _userName)
                     return;
+                string oldValue = _userName;
                 _userName = value;
-                OnPropertyChanged();
+                UserNameChanged?.Invoke(oldValue, _userName);
             }
         }
 
@@ -52,7 +47,6 @@ namespace SocketsChat_WPF
 
             await _client.ConnectAsync(ip, port).ConfigureAwait(false);
 
-            Connected?.Invoke(this);
             await ReadMessageAsync().ConfigureAwait(false);
         }
 
@@ -87,13 +81,13 @@ namespace SocketsChat_WPF
                     MessageReceived?.Invoke(msg);
                     break;
                 case MessageData.Command.ChangeName:
-                    UserName = msg.Error ? UserName : msg.Message;
+                    ProcessChangeName(msg);
                     break;
                 case MessageData.Command.Message:
                     MessageReceived?.Invoke(msg);
                     break;
                 case MessageData.Command.List:
-                    UserListReceived?.Invoke(msg.Message.Split(new [] {','}, StringSplitOptions.RemoveEmptyEntries).ToList());
+                    OnUserListReceived(msg.Message);
                     break;
                 default:
                     break;
@@ -101,6 +95,22 @@ namespace SocketsChat_WPF
 
         }
 
+        private void OnUserListReceived(string userList)
+        {
+            var userDictionary = userList.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(pair => pair.Split('=')).ToDictionary(pair => pair[0], pair => pair[1]);
+
+            UserListReceived?.Invoke(userDictionary);
+        }
+
+        private void ProcessChangeName(MessageData msg)
+        {
+            UserName = msg.Error ? UserName : msg.Message;
+        }
+
+        public void Close()
+        {
+            WriteMessageAsync(new MessageData {CmdCommand = MessageData.Command.Logout, Id = ClientGuid });
+        }
 
         public async void WriteMessageAsync(MessageData message)
         {

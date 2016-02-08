@@ -135,7 +135,7 @@ namespace CustomNetworkExtensions.Annotations
   /// </remarks>
   /// <example><code>
   /// public class Foo : INotifyPropertyChanged {
-  ///   public event PropertyChangedEventHandler PropertyChanged;
+  ///   public event PropertyChangedEventHandler UserNameChanged;
   /// 
   ///   [NotifyPropertyChangedInvocator]
   ///   protected virtual void NotifyChanged(string propertyName) { ... }

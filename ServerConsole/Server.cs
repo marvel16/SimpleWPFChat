@@ -28,7 +28,6 @@ namespace ServerConsole
     {
         private readonly TcpListener _listener = new TcpListener(IPAddress.Any, 50000);
         private ConcurrentDictionary<Guid, User> _clients = new ConcurrentDictionary<Guid, User>();
-        private ManualResetEvent tcpClientConnected = new ManualResetEvent(false);
         private object sync = new object();
 
         public Srv()
@@ -43,25 +42,22 @@ namespace ServerConsole
 
             while (true)
             {
-                tcpClientConnected.Reset();
                 try
                 {
-                    AcceptTcpClientAsync();
+                    AcceptTcpClient();
                 }
                 catch (Exception e)
                 {
                     WriteLine(e.ToString());
                 }
-                tcpClientConnected.WaitOne();
-
             }
         }
 
-        private async Task AcceptTcpClientAsync()
+        private void AcceptTcpClient()
         {
             WriteLine("Waiting for a connection...");
 
-            TcpClient client = await _listener.AcceptTcpClientAsync().ConfigureAwait(false);
+            TcpClient client = _listener.AcceptTcpClient();
 
             var user = new User(client);
             _clients.TryAdd(user.Id, user);
@@ -77,8 +73,7 @@ namespace ServerConsole
 
             WriteMessage(response);
 
-            tcpClientConnected.Set();
-            await ReadMessageAsync(client).ConfigureAwait(false);
+            Task t = ReadMessageAsync(client);
         }
 
         
@@ -111,7 +106,13 @@ namespace ServerConsole
         private void Broadcast(MessageData msg)
         {
             foreach (var client in _clients.Where(client => client.Key != msg.Id))
-                WriteMessage(msg);
+                WriteMessage(new MessageData()
+                {
+                    Id = client.Key,
+                    CmdCommand = MessageData.Command.Message,
+                    Message = msg.Message,
+                    MessageTime = DateTime.Now,
+                });
         }
 
         private void ChangeName(MessageData msg)
@@ -137,14 +138,14 @@ namespace ServerConsole
         private void ReturnUserList(MessageData msg)
         {
             Guid id = msg.Id;
-            string usersList = string.Join(string.Empty, _clients.Where(u => u.Key != id).Select(user => $"{user.Value.Name},"));
+            string usersList = string.Join(string.Empty, _clients.Where(u => u.Key != id).Select(user => $"{user.Value.Id}={user.Value.Name},"));
             
             var responce = new MessageData
             {
                 Id = id,
                 Message = usersList,
                 CmdCommand = MessageData.Command.List,
-                MessageTime = DateTime.Now
+                MessageTime = DateTime.Now,
             };
 
             WriteMessage(responce);

@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        
         mc:Ignorable="d"
         Title="ClientMainWindow"  Height="340" Width="528"
         MinWidth="528" MinHeight="340">
@@ -33,10 +34,10 @@
                     Margin="4"
                     AcceptsTab="True" FontSize="13.333"/>
             </DockPanel>
-            <ListView x:Name="messageBox" Margin="8,4,8,4" ItemsSource="{Binding UserMessages, Mode=OneWay}">
+            <ListView x:Name="messageBox" Margin="8,4,8,4" ItemsSource="{Binding Path=UserMessages, Mode=OneWay}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock>
+                        <TextBlock TextWrapping="Wrap">
                             <Run Text="{Binding MessageTime}"/>
                             <Run Foreground="DarkTurquoise" Text="["/>
                             <Run Foreground="DarkTurquoise" Text="{Binding UserName}"/>

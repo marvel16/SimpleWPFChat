@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -9,7 +10,9 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 using CustomNetworkExtensions;
 using CustomNetworkExtensions.Annotations;
 
@@ -101,19 +104,9 @@ namespace SocketsChat_WPF
     {
         private Client _client;
         public ObservableCollection<UserMessageViewModel> UserMessages { get; } = new ObservableCollection<UserMessageViewModel>();
-        private ObservableCollection<string> _userList = new ObservableCollection<string>();
-        
-        public ObservableCollection<string> UserList
-        {
-            get { return _userList; }
-            set
-            {
-                if (value == _userList)
-                    return;
-                _userList = value;
-                OnPropertyChanged();
-            }
-        }
+        public ConcurrentDictionary<string, string> UserList { get;} = new ConcurrentDictionary<string, string>();
+        private readonly object _userMessagesLock = new object();
+
 
         private string _messageText;
         public string MessageTextToSend
@@ -168,13 +161,14 @@ namespace SocketsChat_WPF
             _client = client;
             _client.MessageReceived += OnMessageDataReceived;
             _client.UserListReceived += OnUserListReceived;
+            _client.UserNameChanged += OnUserNameChanged;
 
-            //_client.Connect("localhost", 50000);
+            BindingOperations.EnableCollectionSynchronization(UserMessages, _userMessagesLock);
 
             ConnectCmd = new ConnectCommand
             {
                 CanExecuteAction = () => ValidateIpAndPort(),
-                ConnectAction = () => _client.Connect(Ip, int.Parse(Port))
+                ConnectAction = async () => await _client.Connect(Ip, int.Parse(Port))
             };
 
             SendCmd = new SendCommand
@@ -206,10 +200,20 @@ namespace SocketsChat_WPF
             UserMessages.Add(ConvertMessageDataToViewModel(message));
         }
 
-        private void OnUserListReceived(List<string> uList)
+        private void OnUserNameChanged(string oldName, string newName)
+        {
+            foreach (var msg in UserMessages.Where(m => m.UserName == oldName))
+                msg.UserName = newName;
+
+        }
+
+        private void OnUserListReceived(Dictionary<string,string> userDictionary)
         {
             UserList.Clear();
-            uList.ForEach(i => UserList.Add(i));
+            foreach (var user in userDictionary)
+            {
+                UserList[user.Key] = user.Value;
+            }
         }
 
         private bool ValidateIpAndPort()
