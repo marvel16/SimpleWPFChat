@@ -19,7 +19,7 @@ namespace SocketsChat_WPF
         private Guid ClientGuid { get; set; }
         private NetworkStream Stream => _client?.GetStream();
         public event Action<MessageData> MessageReceived;
-        public event Action<List<string>> UserListReceived;
+        public event Action<Dictionary<string,string>> UserListReceived;
         public event Action<string,string> UserNameChanged;
         public bool IsConnected => _client.Connected;
 
