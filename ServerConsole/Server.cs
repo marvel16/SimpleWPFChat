@@ -30,16 +30,30 @@ namespace ServerConsole
         private ConcurrentDictionary<Guid, User> _clients = new ConcurrentDictionary<Guid, User>();
         private object sync = new object();
 
+        public string ReturnUserList
+        {
+            get
+            {
+                return string.Join(string.Empty, _clients.Select(user => $"{user.Value.Id}={user.Value.Name},"));
+            }
+        }
+
         public Srv()
         {
-            
+
         }
 
 
         public void Start()
         {
-            _listener.Start();
-
+            try
+            {
+                _listener.Start();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
             while (true)
             {
                 try
@@ -67,16 +81,18 @@ namespace ServerConsole
             {
                 Id = user.Id,
                 CmdCommand = MessageData.Command.Login,
-                Message = user.Name,
+                Message = ReturnUserList,
                 MessageTime = DateTime.Now
             };
 
+
             WriteMessage(response);
+            BroadcastUserListUpdate(user.Id);
 
             Task t = ReadMessageAsync(client);
         }
 
-        
+
 
         void ProcessMessage(MessageData msg)
         {
@@ -90,10 +106,10 @@ namespace ServerConsole
                     break;
                 case MessageData.Command.Message:
                     WriteLine($"{_clients[msg.Id].Name}: {msg.Message}");
-                    Broadcast(msg);
+                    BroadcastMessage(msg);
                     break;
                 case MessageData.Command.List:
-                    ReturnUserList(msg);
+                    SendUserList(msg.Id, ReturnUserList);
                     break;
                 case MessageData.Command.Logout:
                 default:
@@ -103,17 +119,7 @@ namespace ServerConsole
 
         }
 
-        private void Broadcast(MessageData msg)
-        {
-            foreach (var client in _clients.Where(client => client.Key != msg.Id))
-                WriteMessage(new MessageData()
-                {
-                    Id = client.Key,
-                    CmdCommand = MessageData.Command.Message,
-                    Message = msg.Message,
-                    MessageTime = DateTime.Now,
-                });
-        }
+        
 
         private void ChangeName(MessageData msg)
         {
@@ -135,20 +141,17 @@ namespace ServerConsole
             WriteMessage(responce);
         }
 
-        private void ReturnUserList(MessageData msg)
-        {
-            Guid id = msg.Id;
-            string usersList = string.Join(string.Empty, _clients.Where(u => u.Key != id).Select(user => $"{user.Value.Id}={user.Value.Name},"));
-            
-            var responce = new MessageData
-            {
-                Id = id,
-                Message = usersList,
-                CmdCommand = MessageData.Command.List,
-                MessageTime = DateTime.Now,
-            };
+        private void SendUserList(Guid id, string list)
+        { 
+            var response = new MessageData
+                {
+                    Id = id,
+                    Message = list,
+                    CmdCommand = MessageData.Command.List,
+                    MessageTime = DateTime.Now,
+                };
 
-            WriteMessage(responce);
+            WriteMessage(response);
         }
 
         private void RemoveClient(MessageData msg)
@@ -170,10 +173,10 @@ namespace ServerConsole
 
             var stream = client.GetStream();
 
-            MessageData msg = null;
 
             while (client.Connected)
             {
+                MessageData msg;
                 int headerLength = sizeof(int);
                 byte[] header = await stream.ReadMessageFromStreamAsync(headerLength);
 
@@ -185,12 +188,31 @@ namespace ServerConsole
             }
         }
 
-        public void WriteMessage(MessageData msg)
+        public void WriteMessage(MessageData msg , TcpClient tcpClient = null)
         {
-            var client = _clients[msg.Id].Client;
+            var client = tcpClient ?? _clients[msg.Id].Client;
             byte[] bytes = msg.ToByteArray();
             var stream = client?.GetStream();
             stream?.WriteAsync(bytes, 0, bytes.Length);
+        }
+
+        private void BroadcastMessage(MessageData msg)
+        {
+            foreach (var client in _clients.Where(client => client.Key != msg.Id))
+                WriteMessage(new MessageData()
+                {
+                    Id = msg.Id,
+                    CmdCommand = MessageData.Command.Message,
+                    Message = msg.Message,
+                    MessageTime = DateTime.Now,
+                }, client.Value.Client);
+        }
+
+        public void BroadcastUserListUpdate(Guid id)
+        {
+            var userList = ReturnUserList;
+            foreach (var userId in _clients.Where(entry => entry.Value.Id != id).Select(entry => entry.Value.Id))
+                SendUserList(userId, userList);
         }
 
     }

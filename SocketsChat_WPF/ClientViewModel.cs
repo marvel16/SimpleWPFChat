@@ -38,18 +38,6 @@ namespace SocketsChat_WPF
             }
         }
 
-        public string Id
-        {
-            get { return _id; }
-            set
-            {
-                if (_message == value)
-                    return;
-                _id = value;
-                OnPropertyChanged();
-            }
-        }
-
         public string Status
         {
             get { return _status; }
@@ -183,6 +171,7 @@ namespace SocketsChat_WPF
         {
             var msg = new MessageData
             {
+                Id = _client.UserGuid,
                 Message = MessageTextToSend,
                 CmdCommand = MessageData.Command.Message,
                 MessageTime = DateTime.Now,
@@ -225,14 +214,19 @@ namespace SocketsChat_WPF
 
         private UserMessageViewModel ConvertMessageDataToViewModel(MessageData msgData)
         {
+            
+            string userName;
+
+            if (!UserList.TryGetValue(msgData.Id.ToString(), out userName))
+                userName = "System";
+
             return new UserMessageViewModel()
             {
                 Message = msgData.Message,
                 Command = msgData.CmdCommand.ToString(),
-                Id = msgData.Id.ToString(),
                 Status = msgData.Status.ToString(),
                 MessageTime = msgData.MessageTime.ToShortTimeString(),
-                UserName = _client.UserName,
+                UserName = userName,
             };
         }
 

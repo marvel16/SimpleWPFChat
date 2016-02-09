@@ -23,6 +23,7 @@ namespace SocketsChat_WPF
         public ClientMainWindow()
         {
             InitializeComponent();
+            messageBox.ItemsSource.
         }
     }
 }

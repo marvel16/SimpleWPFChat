@@ -34,7 +34,6 @@
                     Margin="4"
                     AcceptsTab="True" FontSize="13.333">
                     <TextBox.InputBindings>
-                        <KeyBinding Command="{Binding SendCmd}" Key="Enter" />
                         <KeyBinding Command="{Binding SendCmd}" Modifiers="Control" Key="Enter" />
                     </TextBox.InputBindings>
                 </TextBox>
