@@ -32,7 +32,12 @@
                          AcceptsReturn="True"
                     HorizontalContentAlignment="Stretch"
                     Margin="4"
-                    AcceptsTab="True" FontSize="13.333"/>
+                    AcceptsTab="True" FontSize="13.333">
+                    <TextBox.InputBindings>
+                        <KeyBinding Command="{Binding SendCmd}" Key="Enter" />
+                        <KeyBinding Command="{Binding SendCmd}" Modifiers="Control" Key="Enter" />
+                    </TextBox.InputBindings>
+                </TextBox>
             </DockPanel>
             <ListView x:Name="messageBox" Margin="8,4,8,4" ItemsSource="{Binding Path=UserMessages, Mode=OneWay}">
                 <ListView.ItemTemplate>
