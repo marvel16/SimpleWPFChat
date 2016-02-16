@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -49,6 +50,7 @@ namespace ServerConsole
                 catch (Exception e)
                 {
                     WriteLine(e.ToString());
+                    Trace.WriteLine(e);
                 }
             }
         }
@@ -166,14 +168,13 @@ namespace ServerConsole
         private async Task ReadMessageAsync(TcpClient client)
         {
             if (client == null)
-                throw new ArgumentNullException("TcpClient client");
+                throw new ArgumentNullException();
 
-            var stream = client.GetStream();
-
-            MessageData msg = null;
+            MessageData msg;
 
             while (client.Connected)
             {
+                var stream = client.GetStream();
                 int headerLength = sizeof(int);
                 byte[] header = await stream.ReadMessageFromStreamAsync(headerLength);
 
@@ -190,7 +191,15 @@ namespace ServerConsole
             var client = _clients[msg.Id].Client;
             byte[] bytes = msg.ToByteArray();
             var stream = client?.GetStream();
-            stream?.WriteAsync(bytes, 0, bytes.Length);
+            try
+            {
+                stream?.WriteAsync(bytes, 0, bytes.Length);
+            }
+            catch (Exception e)
+            {
+                WriteLine(e.ToString());
+                Trace.WriteLine(e);
+            }
         }
 
     }

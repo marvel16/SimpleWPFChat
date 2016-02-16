@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -51,24 +52,7 @@ namespace SocketsChat_WPF
         }
 
 
-        public async Task ReadMessageAsync()
-        {
-            if (Stream == null)
-                throw new Exception("ReadMessageAsync(): Stream is null.");
-            MessageData msg = null;
-            while (_client.Connected)
-            {
-                int headerLength = sizeof(int);
-                byte[] header = await Stream.ReadMessageFromStreamAsync(headerLength).ConfigureAwait(false);
-
-                int messageLength = BitConverter.ToInt32(header, 0);
-                byte[] message = await Stream.ReadMessageFromStreamAsync(messageLength).ConfigureAwait(false);
-
-                msg = message.ByteArrayToMessage();
-
-                ProcessMessage(msg);
-            }
-        }
+        
 
         void ProcessMessage(MessageData msg)
         {
@@ -112,13 +96,41 @@ namespace SocketsChat_WPF
             WriteMessageAsync(new MessageData {CmdCommand = MessageData.Command.Logout, Id = ClientGuid });
         }
 
+        public async Task ReadMessageAsync()
+        {
+            if (Stream == null || !_client.Connected)
+                throw new ArgumentException("Connection lost...");
+            MessageData msg = null;
+            while (_client.Connected)
+            {
+                int headerLength = sizeof(int);
+                byte[] header = await Stream.ReadMessageFromStreamAsync(headerLength).ConfigureAwait(false);
+
+                int messageLength = BitConverter.ToInt32(header, 0);
+                byte[] message = await Stream.ReadMessageFromStreamAsync(messageLength).ConfigureAwait(false);
+
+                msg = message.ByteArrayToMessage();
+
+                ProcessMessage(msg);
+            }
+        }
+
         public async void WriteMessageAsync(MessageData message)
         {
-            if (Stream == null)
-                throw new Exception("WriteMessageAsync() : Stream is null");
+            if (Stream == null || !_client.Connected)
+                throw new ArgumentException();
+
             message.Id = ClientGuid;
             byte[] bytes = message.ToByteArray();
-            await Stream.WriteAsync(bytes, 0, bytes.Length);
+            try
+            {
+                await Stream.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e);
+            }
+
         }
 
         

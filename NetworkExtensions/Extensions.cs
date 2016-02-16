@@ -3,6 +3,7 @@ using System.CodeDom;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -112,14 +113,23 @@ namespace CustomNetworkExtensions
         public static async Task<byte[]> ReadMessageFromStreamAsync(this NetworkStream stream, int messageLength)
         {
             if(stream == null)
-                throw new Exception("Stream is null");
+                throw new ArgumentException();
             if(messageLength < 1)
-                throw new Exception("Impossible to read 0 or less bytes");
+                throw new ArgumentException("Impossible to read 0 or less bytes");
 
             byte[] bytes = new byte[messageLength];
             int readPos = 0;
-            while (readPos < messageLength)
-                readPos += await stream?.ReadAsync(bytes, readPos, bytes.Length - readPos);
+
+            try
+            {
+                while (readPos < messageLength)
+                    readPos += await stream?.ReadAsync(bytes, readPos, bytes.Length - readPos);
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e);
+            }
+            
             return bytes;
         }
     }

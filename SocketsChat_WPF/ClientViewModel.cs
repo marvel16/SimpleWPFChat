@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -103,9 +104,12 @@ namespace SocketsChat_WPF
     public class ClientViewModel : BaseViewModel
     {
         private Client _client;
+        
         public ObservableCollection<UserMessageViewModel> UserMessages { get; } = new ObservableCollection<UserMessageViewModel>();
         public ConcurrentDictionary<string, string> UserList { get;} = new ConcurrentDictionary<string, string>();
         private readonly object _userMessagesLock = new object();
+
+        private bool Connected => _client.IsConnected;
 
 
         private string _messageText;
@@ -167,13 +171,25 @@ namespace SocketsChat_WPF
 
             ConnectCmd = new ConnectCommand
             {
-                CanExecuteAction = () => ValidateIpAndPort(),
-                ConnectAction = async () => await _client.Connect(Ip, int.Parse(Port))
+                CanExecuteAction = () => ValidateConnectionInfo(),
+                ConnectAction = async () =>
+                {
+                    try
+                    {
+                        await _client.Connect(Ip, int.Parse(Port));
+                    }
+                    catch (Exception e)
+                    {
+                        Trace.WriteLine(e);
+                        AddErrorMessage("Connection lost");
+                        
+                    }
+                }
             };
 
             SendCmd = new SendCommand
             {
-                CanExecuteAction = () => !string.IsNullOrEmpty(MessageTextToSend) && _client.IsConnected,
+                CanExecuteAction = () => !string.IsNullOrEmpty(MessageTextToSend) && Connected,
                 SendAction = () => SendMessage(),
             };
              
@@ -216,11 +232,12 @@ namespace SocketsChat_WPF
             }
         }
 
-        private bool ValidateIpAndPort()
+        private bool ValidateConnectionInfo()
         {
             int p;
             IPAddress ip;
-            return int.TryParse(Port, out p) && IPAddress.TryParse(Ip, out ip);
+            
+            return !Connected && int.TryParse(Port, out p) && IPAddress.TryParse(Ip, out ip);
         }
 
         private UserMessageViewModel ConvertMessageDataToViewModel(MessageData msgData)
@@ -236,7 +253,17 @@ namespace SocketsChat_WPF
             };
         }
 
-        
+        private void AddErrorMessage(string message)
+        {
+            var msg = new UserMessageViewModel
+            {
+                Message = message,
+                MessageTime = DateTime.Now.ToShortTimeString(),
+                UserName = "System",
+            };
+            UserMessages.Add(msg);
+        }
+
     }
 
     public class SendCommand : ICommand
@@ -262,10 +289,13 @@ namespace SocketsChat_WPF
         public event EventHandler CanExecuteChanged;
     }
 
+    
+
     public class ConnectCommand : ICommand
     {
         public Func<bool> CanExecuteAction;
         public Action ConnectAction;
+
 
         public void OnAddressChanged()
         {
