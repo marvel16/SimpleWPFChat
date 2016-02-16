@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -16,13 +15,14 @@ namespace SocketsChat_WPF
 {
     public class Client
     {
-        private TcpClient _client = new TcpClient();
-        private Guid ClientGuid { get; set; }
-        private NetworkStream Stream => _client?.GetStream();
-        public event Action<MessageData> MessageReceived;
-        public event Action<Dictionary<string,string>> UserListReceived;
-        public event Action<string,string> UserNameChanged;
+        public Guid UserGuid { get; set; }
         public bool IsConnected => _client.Connected;
+        public event Action<MessageData> MessageReceived;
+        public event Action<string,string> UserNameChanged;
+        public event Action<Dictionary<string,string>> UserListReceived;
+        private TcpClient _client = new TcpClient();
+        private NetworkStream Stream => _client?.GetStream();
+        private Dictionary<string, string> UserNameDictionary = new Dictionary<string, string>();
 
 
 
@@ -52,16 +52,14 @@ namespace SocketsChat_WPF
         }
 
 
-        
+       
 
         void ProcessMessage(MessageData msg)
         {
             switch (msg.CmdCommand)
             {
                 case MessageData.Command.Login:
-                    ClientGuid = msg.Id;
-                    UserName = msg.Message;
-                    msg.Message = "Connected";
+                    OnUserLogin(msg);
                     MessageReceived?.Invoke(msg);
                     break;
                 case MessageData.Command.ChangeName:
@@ -79,11 +77,21 @@ namespace SocketsChat_WPF
 
         }
 
+        private void OnUserLogin(MessageData msg)
+        {
+            UserGuid = msg.Id;
+            OnUserListReceived(msg.Message);
+            string userName;
+            if (!UserNameDictionary.TryGetValue(msg.Id.ToString(), out userName))
+                userName = "Don't exist";
+            UserName = userName;
+            msg.Message = "Connected";
+        }
+
         private void OnUserListReceived(string userList)
         {
-            var userDictionary = userList.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(pair => pair.Split('=')).ToDictionary(pair => pair[0], pair => pair[1]);
-
-            UserListReceived?.Invoke(userDictionary);
+            UserNameDictionary = userList.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(entry => entry.Split('=')).ToDictionary(entry => entry[0], entry => entry[1]);
+            UserListReceived?.Invoke(UserNameDictionary);
         }
 
         private void ProcessChangeName(MessageData msg)
@@ -93,13 +101,13 @@ namespace SocketsChat_WPF
 
         public void Close()
         {
-            WriteMessageAsync(new MessageData {CmdCommand = MessageData.Command.Logout, Id = ClientGuid });
+            WriteMessageAsync(new MessageData {CmdCommand = MessageData.Command.Logout, Id = UserGuid });
         }
 
         public async Task ReadMessageAsync()
         {
-            if (Stream == null || !_client.Connected)
-                throw new ArgumentException("Connection lost...");
+            if (Stream == null)
+                throw new Exception("ReadMessageAsync(): Stream is null.");
             MessageData msg = null;
             while (_client.Connected)
             {
@@ -117,20 +125,11 @@ namespace SocketsChat_WPF
 
         public async void WriteMessageAsync(MessageData message)
         {
-            if (Stream == null || !_client.Connected)
-                throw new ArgumentException();
-
-            message.Id = ClientGuid;
+            if (Stream == null)
+                throw new Exception("WriteMessageAsync() : Stream is null");
+            
             byte[] bytes = message.ToByteArray();
-            try
-            {
-                await Stream.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                Trace.WriteLine(e);
-            }
-
+            await Stream.WriteAsync(bytes, 0, bytes.Length);
         }
 
         
