@@ -39,6 +39,11 @@
                 </TextBox>
             </DockPanel>
             <ListView x:Name="messageBox" Margin="8,4,8,4" ItemsSource="{Binding Path=UserMessages, Mode=OneWay}">
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Remove" Command="{Binding ChangeUserNameCmd}"/>
+                    </ContextMenu>
+                </ListView.ContextMenu>
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <TextBlock TextWrapping="Wrap">

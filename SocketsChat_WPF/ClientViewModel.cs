@@ -283,7 +283,28 @@ namespace SocketsChat_WPF
         public event EventHandler CanExecuteChanged;
     }
 
-    
+    public class ChangeUserNameCmd : ICommand
+    {
+        public Func<bool> CanExecuteAction;
+        public Action ChangeUserNameAction;
+
+
+        public void OnAddressChanged()
+        {
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
+        public bool CanExecute(object parameter)
+        {
+            return CanExecuteAction();
+        }
+
+        public void Execute(object parameter)
+        {
+            ChangeUserNameAction();
+        }
+
+        public event EventHandler CanExecuteChanged;
+    }
 
     public class ConnectCommand : ICommand
     {
