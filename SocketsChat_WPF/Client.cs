@@ -83,7 +83,7 @@ namespace SocketsChat_WPF
             OnUserListReceived(msg.Message);
             string userName;
             if (!UserNameDictionary.TryGetValue(msg.Id.ToString(), out userName))
-                userName = "Don't exist";
+                userName = "Doesn't exist";
             UserName = userName;
             msg.Message = "Connected";
         }

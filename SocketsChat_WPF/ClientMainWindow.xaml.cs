@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,6 +24,18 @@ namespace SocketsChat_WPF
         public ClientMainWindow()
         {
             InitializeComponent();
+            ((INotifyCollectionChanged)messageBox.Items).CollectionChanged += ListView_CollectionChanged;
+        }
+
+        private void ListView_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add)
+            {
+                // scroll the new item into view   
+                messageBox.ScrollIntoView(e.NewItems[0]);
+            }
         }
     }
+
+    
 }
