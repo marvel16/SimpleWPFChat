@@ -74,6 +74,11 @@
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="BaseViewModel.cs" />
     <Compile Include="ClientViewModel.cs" />
+    <Compile Include="Options.cs" />
+    <Compile Include="UserOptions.xaml.cs">
+      <DependentUpon>UserOptions.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserOptionsViewModel.cs" />
     <Page Include="ClientMainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -86,6 +91,10 @@
       <DependentUpon>ClientMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="UserOptions.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

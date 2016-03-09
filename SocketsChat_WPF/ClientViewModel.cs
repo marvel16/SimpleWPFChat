@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using CustomNetworkExtensions;
 using CustomNetworkExtensions.Annotations;
@@ -94,8 +95,10 @@ namespace SocketsChat_WPF
         private Client _client;
         
         public ObservableCollection<UserMessageViewModel> UserMessages { get; } = new ObservableCollection<UserMessageViewModel>();
-        public ConcurrentDictionary<string, string> UserList { get;} = new ConcurrentDictionary<string, string>();
+        public ConcurrentDictionary<string, string> UserList { get; } = new ConcurrentDictionary<string, string>();
         private readonly object _userMessagesLock = new object();
+
+        private UserOptionsViewModel _optionsVM = new UserOptionsViewModel();
 
         private bool Connected => _client.IsConnected;
 
@@ -146,6 +149,8 @@ namespace SocketsChat_WPF
         public SendCommand SendCmd { get; }
         public ConnectCommand ConnectCmd { get; }
 
+        public UserOptionsCommand UserOptionsCmd { get; }
+
         #endregion
 
         public ClientViewModel(Client client)
@@ -154,6 +159,7 @@ namespace SocketsChat_WPF
             _client.MessageReceived += OnMessageDataReceived;
             _client.UserListReceived += OnUserListReceived;
             _client.UserNameChanged += OnUserNameChanged;
+            _client.OnLogin += OnLogin;
 
             BindingOperations.EnableCollectionSynchronization(UserMessages, _userMessagesLock);
 
@@ -180,7 +186,18 @@ namespace SocketsChat_WPF
                 CanExecuteAction = () => !string.IsNullOrEmpty(MessageTextToSend) && Connected,
                 SendAction = () => SendMessage(),
             };
-             
+
+            UserOptionsCmd = new UserOptionsCommand
+            {
+                UserOptionsAction = () =>
+                {
+                    var userOptionsDialog = new UserOptions();
+                    _optionsVM.SaveCmd.SaveOptionsAction = OnUserOptionsSave;
+                    _optionsVM.SaveCmd.OnClose = () => userOptionsDialog.Close();
+                    userOptionsDialog.DataContext = _optionsVM;
+                    userOptionsDialog.Show();
+                }
+            };
         }
 
         private void SendMessage()
@@ -200,6 +217,16 @@ namespace SocketsChat_WPF
 
         }
 
+        private void OnLogin()
+        {
+            ChangeUserName(_optionsVM.UserName);
+        }
+
+        private void OnUserOptionsSave()
+        {
+            ChangeUserName(_optionsVM.UserName);
+        }
+
         private void OnMessageDataReceived(MessageData message)
         {
             UserMessages.Add(ConvertMessageDataToViewModel(message));
@@ -209,7 +236,11 @@ namespace SocketsChat_WPF
         {
             foreach (var msg in UserMessages.Where(m => m.UserName == oldName))
                 msg.UserName = newName;
+        }
 
+        private void ChangeUserName(string newName)
+        {
+            _client.ChangeUserNameRequest(newName);
         }
 
         private void OnUserListReceived(Dictionary<string,string> userDictionary)
@@ -219,6 +250,7 @@ namespace SocketsChat_WPF
             {
                 UserList[user.Key] = user.Value;
             }
+
         }
 
         private bool ValidateConnectionInfo()
@@ -283,24 +315,18 @@ namespace SocketsChat_WPF
         public event EventHandler CanExecuteChanged;
     }
 
-    public class ChangeUserNameCmd : ICommand
+    public class UserOptionsCommand : ICommand
     {
-        public Func<bool> CanExecuteAction;
-        public Action ChangeUserNameAction;
+        public Action UserOptionsAction;
 
-
-        public void OnAddressChanged()
-        {
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-        }
         public bool CanExecute(object parameter)
         {
-            return CanExecuteAction();
+            return true;
         }
 
         public void Execute(object parameter)
         {
-            ChangeUserNameAction();
+            UserOptionsAction?.Invoke();
         }
 
         public event EventHandler CanExecuteChanged;

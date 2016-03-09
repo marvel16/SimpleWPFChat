@@ -98,39 +98,53 @@ namespace CustomNetworkExtensions
             return bytes.ToArray();
         }
 
-        public static MessageData ByteArrayToMessage(this byte[] bytes)
+        public static object ByteArrayToObject(this byte[] bytes)
         {
-            var memStream = new MemoryStream();
-            var binForm = new BinaryFormatter();
-            memStream.Write(bytes, 0, bytes.Length);
-            memStream.Seek(0, SeekOrigin.Begin);
-            var obj = binForm.Deserialize(memStream);
-            memStream.Close();
+            using (var memStream = new MemoryStream())
+            {
+                var binForm = new BinaryFormatter();
 
-            return (MessageData)obj;
+                memStream.Write(bytes, 0, bytes.Length);
+                memStream.Seek(0, SeekOrigin.Begin);
+
+                return binForm.Deserialize(memStream);
+            }
         }
 
-        public static async Task<byte[]> ReadMessageFromStreamAsync(this NetworkStream stream, int messageLength)
+        public static async Task<byte[]> ReadFromStreamAsync(this NetworkStream stream, int length)
         {
             if(stream == null)
-                throw new ArgumentException();
-            if(messageLength < 1)
+                throw new ArgumentException("stream");
+            if(length < 1)
                 throw new ArgumentException("Impossible to read 0 or less bytes");
 
-            byte[] bytes = new byte[messageLength];
+            byte[] bytes = new byte[length];
             int readPos = 0;
 
-            try
-            {
-                while (readPos < messageLength)
-                    readPos += await stream?.ReadAsync(bytes, readPos, bytes.Length - readPos);
-            }
-            catch (Exception e)
-            {
-                Trace.WriteLine(e);
-            }
+            while (readPos < length)
+                readPos += await stream.ReadAsync(bytes, readPos, bytes.Length - readPos);
             
             return bytes;
+        }
+
+        public static async Task<MessageData> ReadMessageAsync(this NetworkStream stream)
+        {
+            int headerLength = sizeof(int);
+            byte[] header = await stream.ReadFromStreamAsync(headerLength);
+
+            int messageLength = BitConverter.ToInt32(header, 0);
+            byte[] message = await stream.ReadFromStreamAsync(messageLength);
+
+            return message.ByteArrayToObject() as MessageData;
+        }
+
+        public static void WriteMessageAsync(this NetworkStream stream, MessageData msg)
+        {
+            if (stream == null)
+                throw new ArgumentException(nameof(stream));
+
+            byte[] bytes = msg.ToByteArray();
+            stream.WriteAsync(bytes, 0, bytes.Length);
         }
     }
 

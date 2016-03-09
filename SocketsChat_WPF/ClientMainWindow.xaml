@@ -22,6 +22,11 @@
                         Content="Connect"
                         Command="{Binding ConnectCmd}"
                         />
+                <Button Margin="50 4 4 4"
+                        Width="50"
+                        Background="#FF8EBBD1"
+                        Content="Options"
+                        Command="{Binding UserOptionsCmd}"/>
             </WrapPanel>
             <DockPanel Margin="4" DockPanel.Dock="Bottom" >
                 <Button x:Name="SendButton"

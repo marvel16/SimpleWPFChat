@@ -81,15 +81,15 @@ namespace ServerConsole
             {
                 Id = user.Id,
                 CmdCommand = MessageData.Command.Login,
-                Message = ReturnUserList,
+                Message = user.Name,
                 MessageTime = DateTime.Now
             };
 
 
             WriteMessage(response);
-            BroadcastUserListUpdate(user.Id);
+            BroadcastUserListUpdate();
 
-            Task t = ReadMessageAsync(client);
+            Task t = MessageLoop(client);
         }
 
 
@@ -127,18 +127,24 @@ namespace ServerConsole
             var responce = new MessageData
             {
                 Id = msg.Id,
+                CmdCommand = MessageData.Command.ChangeName,
                 Message = msg.Message,
                 MessageTime = DateTime.Now,
             };
 
             if (allowChange)
+            {
+                _clients[msg.Id].Name = msg.Message;
                 WriteLine($"{_clients[msg.Id].Name}: Changed name to \"{msg.Message}\".");
+            }
             else
                 WriteLine($"{_clients[msg.Id].Name}: Couldn't change name to \"{msg.Message}\" because user with that name already exists.");
 
             responce.Error = !allowChange;
 
             WriteMessage(responce);
+            
+            BroadcastUserListUpdate();
         }
 
         private void SendUserList(Guid id, string list)
@@ -166,24 +172,14 @@ namespace ServerConsole
             Console.WriteLine($"[{DateTime.Now}]: {line}");
         }
 
-        private async Task ReadMessageAsync(TcpClient client)
+        private async Task MessageLoop(TcpClient client)
         {
             if (client == null)
-                throw new ArgumentNullException("TcpClient client");
-
-            var stream = client.GetStream();
-
+                throw new ArgumentNullException(nameof(client));
 
             while (client.Connected)
             {
-                MessageData msg;
-                int headerLength = sizeof(int);
-                byte[] header = await stream.ReadMessageFromStreamAsync(headerLength);
-
-                int messageLength = BitConverter.ToInt32(header, 0);
-                byte[] message = await stream.ReadMessageFromStreamAsync(messageLength);
-
-                msg = message.ByteArrayToMessage();
+                MessageData msg = await client.GetStream().ReadMessageAsync();
                 ProcessMessage(msg);
             }
         }
@@ -191,9 +187,7 @@ namespace ServerConsole
         public void WriteMessage(MessageData msg , TcpClient tcpClient = null)
         {
             var client = tcpClient ?? _clients[msg.Id].Client;
-            byte[] bytes = msg.ToByteArray();
-            var stream = client?.GetStream();
-            stream?.WriteAsync(bytes, 0, bytes.Length);
+            client.GetStream().WriteMessageAsync(msg);
         }
 
         private void BroadcastMessage(MessageData msg)
@@ -208,10 +202,10 @@ namespace ServerConsole
                 }, client.Value.Client);
         }
 
-        public void BroadcastUserListUpdate(Guid id)
+        public void BroadcastUserListUpdate()
         {
             var userList = ReturnUserList;
-            foreach (var userId in _clients.Where(entry => entry.Value.Id != id).Select(entry => entry.Value.Id))
+            foreach (var userId in _clients.Select(entry => entry.Value.Id))
                 SendUserList(userId, userList);
         }
 

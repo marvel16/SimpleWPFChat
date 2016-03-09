@@ -33,7 +33,7 @@ namespace UnitTests
 
 
             byte[] bytes = expectedMessage.ToByteArray();
-            var convertedMessage = bytes.ByteArrayToMessage();
+            var convertedMessage = bytes.ByteArrayToObject();
 
             Assert.That(expectedMessage.Message, Is.EqualTo(convertedMessage.Message));
             Assert.That(expectedMessage.Id, Is.EqualTo(convertedMessage.Id));
@@ -55,7 +55,7 @@ namespace UnitTests
 
 
             byte[] bytes = expectedMessage.ToByteArray();
-            var convertedMessage = bytes.ByteArrayToMessage();
+            var convertedMessage = bytes.ByteArrayToObject();
 
             Assert.That(expectedMessage.Message, Is.EqualTo(convertedMessage.Message));
             Assert.That(expectedMessage.Id, Is.EqualTo(convertedMessage.Id));
