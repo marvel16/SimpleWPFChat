@@ -19,7 +19,6 @@ namespace ServerConsole
         {
             var server = new Srv();
             server.Start();
-
         }
 
     }
@@ -28,19 +27,15 @@ namespace ServerConsole
     {
         private readonly TcpListener _listener = new TcpListener(IPAddress.Any, 50000);
         private ConcurrentDictionary<Guid, User> _clients = new ConcurrentDictionary<Guid, User>();
+        const char _separator = (char)3;
         private object sync = new object();
 
         public string ReturnUserList
         {
             get
             {
-                return string.Join(string.Empty, _clients.Select(user => $"{user.Value.Id}={user.Value.Name},"));
+                return string.Join(string.Empty, _clients.Select(user => $"{user.Value.Id}{_separator}{user.Value.Name},"));
             }
-        }
-
-        public Srv()
-        {
-
         }
 
 
@@ -80,11 +75,9 @@ namespace ServerConsole
             var response = new MessageData
             {
                 Id = user.Id,
-                CmdCommand = MessageData.Command.Login,
-                Message = user.Name,
+                Command = Command.Login,
                 MessageTime = DateTime.Now
             };
-
 
             WriteMessage(response);
             BroadcastUserListUpdate();
@@ -96,22 +89,20 @@ namespace ServerConsole
 
         void ProcessMessage(MessageData msg)
         {
-            switch (msg.CmdCommand)
+
+            switch (msg.Command)
             {
-                case MessageData.Command.Login:
-                    WriteMessage(msg);
-                    break;
-                case MessageData.Command.ChangeName:
+                case Command.ChangeName:
                     ChangeName(msg);
                     break;
-                case MessageData.Command.Message:
+                case Command.Message:
                     WriteLine($"{_clients[msg.Id].Name}: {msg.Message}");
-                    BroadcastMessage(msg);
+                    BroadcastMessageFromClient(msg);
                     break;
-                case MessageData.Command.List:
+                case Command.List:
                     SendUserList(msg.Id, ReturnUserList);
                     break;
-                case MessageData.Command.Logout:
+                case Command.Logout:
                 default:
                     RemoveClient(msg);
                     break;
@@ -123,42 +114,35 @@ namespace ServerConsole
 
         private void ChangeName(MessageData msg)
         {
-            bool allowChange = _clients.All(client => client.Value.Name != msg.Message);
+
             var responce = new MessageData
             {
                 Id = msg.Id,
-                CmdCommand = MessageData.Command.ChangeName,
-                Message = msg.Message,
+                Command = Command.ChangeName,
                 MessageTime = DateTime.Now,
             };
 
-            if (allowChange)
+            var oldName = _clients[msg.Id].Name;
+            var newName = msg.Message;
+
+            bool allowChange = !string.IsNullOrEmpty(msg.Message) && _clients.All(client => client.Value.Name != msg.Message);
+            if (!allowChange)
             {
-                _clients[msg.Id].Name = msg.Message;
-                WriteLine($"{_clients[msg.Id].Name}: Changed name to \"{msg.Message}\".");
+                string error = $"Couldn't change name to \"{newName}\" because user with that name already exists.";
+                responce.Error = !allowChange;
+                responce.Message = error;
+                WriteLine($"{oldName}: {error}");
+                WriteMessage(responce);
+                return;
             }
-            else
-                WriteLine($"{_clients[msg.Id].Name}: Couldn't change name to \"{msg.Message}\" because user with that name already exists.");
 
-            responce.Error = !allowChange;
-
-            WriteMessage(responce);
-            
-            BroadcastUserListUpdate();
+            _clients[msg.Id].Name = newName;
+            responce.Message = oldName + _separator + newName;
+            WriteLine($"User \"{oldName}\" changed name to \"{newName}\".");
+            BroadcastMessage(responce);
         }
 
-        private void SendUserList(Guid id, string list)
-        { 
-            var response = new MessageData
-                {
-                    Id = id,
-                    Message = list,
-                    CmdCommand = MessageData.Command.List,
-                    MessageTime = DateTime.Now,
-                };
-
-            WriteMessage(response);
-        }
+        
 
         private void RemoveClient(MessageData msg)
         {
@@ -190,16 +174,30 @@ namespace ServerConsole
             client.GetStream().WriteMessageAsync(msg);
         }
 
-        private void BroadcastMessage(MessageData msg)
+        public void BroadcastMessageFromClient(MessageData msg)
         {
             foreach (var client in _clients.Where(client => client.Key != msg.Id))
-                WriteMessage(new MessageData()
+                WriteMessage(new MessageData
                 {
                     Id = msg.Id,
-                    CmdCommand = MessageData.Command.Message,
+                    Command = Command.Message,
                     Message = msg.Message,
                     MessageTime = DateTime.Now,
-                }, client.Value.Client);
+                },
+                client.Value.Client);
+        }
+
+        public void BroadcastMessage(MessageData msg)
+        {
+            foreach (var client in _clients)
+                WriteMessage(new MessageData
+                {
+                    Id = msg.Id,
+                    Command = msg.Command,
+                    Message = msg.Message,
+                    MessageTime = DateTime.Now,
+                },
+                client.Value.Client);
         }
 
         public void BroadcastUserListUpdate()
@@ -207,6 +205,19 @@ namespace ServerConsole
             var userList = ReturnUserList;
             foreach (var userId in _clients.Select(entry => entry.Value.Id))
                 SendUserList(userId, userList);
+        }
+
+        private void SendUserList(Guid id, string list)
+        {
+            var response = new MessageData
+            {
+                Id = id,
+                Message = list,
+                Command = Command.List,
+                MessageTime = DateTime.Now,
+            };
+
+            WriteMessage(response);
         }
 
     }

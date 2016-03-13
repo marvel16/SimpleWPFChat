@@ -25,7 +25,7 @@ namespace UnitTests
             MessageData expectedMessage = new MessageData
             {
                 Id = Guid.Empty,
-                CmdCommand = MessageData.Command.Login,
+                Command = Command.Login,
                 Status = MessageData.UserStatus.Offline,
                 Message = "Hello",
                 MessageTime = DateTime.MinValue,
@@ -33,12 +33,12 @@ namespace UnitTests
 
 
             byte[] bytes = expectedMessage.ToByteArray();
-            var convertedMessage = bytes.ByteArrayToObject();
+            var convertedMessage = (MessageData)bytes.ByteArrayToObject();
 
             Assert.That(expectedMessage.Message, Is.EqualTo(convertedMessage.Message));
             Assert.That(expectedMessage.Id, Is.EqualTo(convertedMessage.Id));
             Assert.That(expectedMessage.Status, Is.EqualTo(convertedMessage.Status));
-            Assert.That(expectedMessage.CmdCommand, Is.EqualTo(convertedMessage.CmdCommand));
+            Assert.That(expectedMessage.Command, Is.EqualTo(convertedMessage.Command));
         }
 
         [Test]
@@ -47,7 +47,7 @@ namespace UnitTests
             MessageData expectedMessage = new MessageData
             {
                 Id = Guid.Empty,
-                CmdCommand = MessageData.Command.Login,
+                Command = Command.Login,
                 Status = MessageData.UserStatus.Offline,
                 Message = null,
                 MessageTime = DateTime.MinValue,
@@ -55,12 +55,12 @@ namespace UnitTests
 
 
             byte[] bytes = expectedMessage.ToByteArray();
-            var convertedMessage = bytes.ByteArrayToObject();
+            var convertedMessage = (MessageData)bytes.ByteArrayToObject();
 
             Assert.That(expectedMessage.Message, Is.EqualTo(convertedMessage.Message));
             Assert.That(expectedMessage.Id, Is.EqualTo(convertedMessage.Id));
             Assert.That(expectedMessage.Status, Is.EqualTo(convertedMessage.Status));
-            Assert.That(expectedMessage.CmdCommand, Is.EqualTo(convertedMessage.CmdCommand));
+            Assert.That(expectedMessage.Command, Is.EqualTo(convertedMessage.Command));
         }
 
     }

@@ -10,7 +10,7 @@ using CustomNetworkExtensions.Annotations;
 
 namespace SocketsChat_WPF
 {
-    public class BaseViewModel : INotifyPropertyChanged
+    public class ViewModelBase : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

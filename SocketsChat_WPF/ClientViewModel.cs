@@ -17,10 +17,11 @@ using System.Windows.Interop;
 using System.Windows.Threading;
 using CustomNetworkExtensions;
 using CustomNetworkExtensions.Annotations;
+using NetworkExtensions;
 
 namespace SocketsChat_WPF
 {
-    public class UserMessageViewModel : BaseViewModel
+    public class UserMessageViewModel : ViewModelBase
     {
         private string _id = String.Empty;
         private string _messageTime = String.Empty;
@@ -90,18 +91,19 @@ namespace SocketsChat_WPF
         }
     }
 
-    public class ClientViewModel : BaseViewModel
+    public class ClientViewModel : ViewModelBase
     {
         private Client _client;
-        
+        private string _userConfig = "options.xml";
+        private Options _options = new Options();
         public ObservableCollection<UserMessageViewModel> UserMessages { get; } = new ObservableCollection<UserMessageViewModel>();
-        public ConcurrentDictionary<string, string> UserList { get; } = new ConcurrentDictionary<string, string>();
+
         private readonly object _userMessagesLock = new object();
 
-        private UserOptionsViewModel _optionsVM = new UserOptionsViewModel();
+        private UserOptionsViewModel _optionsViewModel;
 
         private bool Connected => _client.IsConnected;
-
+        private Dictionary<string, string> UserNameDict => _client.UserNameDictionary;
 
         private string _messageText;
         public string MessageTextToSend
@@ -117,96 +119,78 @@ namespace SocketsChat_WPF
             }
         }
 
-        private string _ip;
+       #region Commands
 
-        public string Ip
-        {
-            get { return _ip; }
-            set
-            {
-                if (_ip == value)
-                    return;
-                _ip = value;
-                ConnectCmd?.OnAddressChanged();
-            }
-        }
+        public SendCommand SendCmd { get; } = new SendCommand();
+        public ConnectCommand ConnectCmd { get; } = new ConnectCommand();
 
-        private string _port;
-        public string Port
-        {
-            get { return _port; }
-            set
-            {
-                if (_port == value)
-                    return;
-                _port = value;
-                ConnectCmd?.OnAddressChanged();
-            }
-        }
-
-        #region Commands
-
-        public SendCommand SendCmd { get; }
-        public ConnectCommand ConnectCmd { get; }
-
-        public UserOptionsCommand UserOptionsCmd { get; }
+        public UserOptionsCommand UserOptionsCmd { get; } = new UserOptionsCommand();
 
         #endregion
 
         public ClientViewModel(Client client)
         {
+            LoadConfig();
+            
             _client = client;
             _client.MessageReceived += OnMessageDataReceived;
-            _client.UserListReceived += OnUserListReceived;
             _client.UserNameChanged += OnUserNameChanged;
             _client.OnLogin += OnLogin;
 
             BindingOperations.EnableCollectionSynchronization(UserMessages, _userMessagesLock);
 
-            ConnectCmd = new ConnectCommand
+            ConnectCmd.CanExecuteAction = ValidateConnectionInfo;
+            ConnectCmd.ConnectAction = async () =>
             {
-                CanExecuteAction = () => ValidateConnectionInfo(),
-                ConnectAction = async () =>
+                try
                 {
-                    try
-                    {
-                        await _client.Connect(Ip, int.Parse(Port));
-                    }
-                    catch (Exception e)
-                    {
-                        Trace.WriteLine(e);
-                        AddErrorMessage("Connection lost");
-                        
-                    }
+                    await _client.Connect(_options.Ip, int.Parse(_options.Port));
+                }
+                catch (Exception e)
+                {
+                    Trace.WriteLine(e);
+                    AddSystemMessage("Couldn't connect: " + e.Message);
                 }
             };
 
-            SendCmd = new SendCommand
-            {
-                CanExecuteAction = () => !string.IsNullOrEmpty(MessageTextToSend) && Connected,
-                SendAction = () => SendMessage(),
-            };
+            SendCmd.CanExecuteAction = () => !string.IsNullOrEmpty(MessageTextToSend) && Connected;
+            SendCmd.SendAction = SendMessage;
 
-            UserOptionsCmd = new UserOptionsCommand
+            UserOptionsCmd.UserOptionsAction = () =>
             {
-                UserOptionsAction = () =>
-                {
-                    var userOptionsDialog = new UserOptions();
-                    _optionsVM.SaveCmd.SaveOptionsAction = OnUserOptionsSave;
-                    _optionsVM.SaveCmd.OnClose = () => userOptionsDialog.Close();
-                    userOptionsDialog.DataContext = _optionsVM;
-                    userOptionsDialog.Show();
-                }
+                var userOptionsDialog = new UserOptions();
+                _optionsViewModel = new UserOptionsViewModel(_options);
+                _optionsViewModel.SaveCmd.SaveOptionsAction = OnUserOptionsSave;
+                _optionsViewModel.SaveCmd.OnClose = () => userOptionsDialog.Close();
+                userOptionsDialog.DataContext = _optionsViewModel;
+                userOptionsDialog.Show();
             };
+        }
+
+        private void LoadConfig()
+        {
+            try
+            {
+                Options opts = null;
+                CfgMan.Deserialize(ref opts, _userConfig);
+                if (opts != null)
+                    _options = opts;
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e);
+            }
+
+            _options.PropertyChanged += (sender, args) => ConnectCmd.OnConnectOptionsChanged();
         }
 
         private void SendMessage()
         {
             var msg = new MessageData
             {
-                Id = _client.UserGuid,
+                Id = _client.UserId,
                 Message = MessageTextToSend,
-                CmdCommand = MessageData.Command.Message,
+                Command = Command.Message,
                 MessageTime = DateTime.Now,
             };
 
@@ -219,17 +203,30 @@ namespace SocketsChat_WPF
 
         private void OnLogin()
         {
-            ChangeUserName(_optionsVM.UserName);
+            AddSystemMessage("You have joined the chat");
+            ChangeUserName(_options.UserName);
         }
 
         private void OnUserOptionsSave()
         {
-            ChangeUserName(_optionsVM.UserName);
+            ChangeUserName(_options.UserName);
+
+            try
+            {
+                CfgMan.Serialize(_options, _userConfig);
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e);
+            }
         }
 
         private void OnMessageDataReceived(MessageData message)
         {
-            UserMessages.Add(ConvertMessageDataToViewModel(message));
+            if (message.Error)
+                AddSystemMessage(message.Message);
+            else
+                UserMessages.Add(ConvertMessageDataToViewModel(message));
         }
 
         private void OnUserNameChanged(string oldName, string newName)
@@ -243,43 +240,33 @@ namespace SocketsChat_WPF
             _client.ChangeUserNameRequest(newName);
         }
 
-        private void OnUserListReceived(Dictionary<string,string> userDictionary)
-        {
-            UserList.Clear();
-            foreach (var user in userDictionary)
-            {
-                UserList[user.Key] = user.Value;
-            }
-
-        }
 
         private bool ValidateConnectionInfo()
         {
             int p;
             IPAddress ip;
             
-            return !Connected && int.TryParse(Port, out p) && IPAddress.TryParse(Ip, out ip);
+            return !Connected && int.TryParse(_options.Port, out p) && IPAddress.TryParse(_options.Ip, out ip);
         }
 
         private UserMessageViewModel ConvertMessageDataToViewModel(MessageData msgData)
         {
-            
             string userName;
 
-            if (!UserList.TryGetValue(msgData.Id.ToString(), out userName))
+            if (!UserNameDict.TryGetValue(msgData.Id.ToString(), out userName))
                 userName = "System";
 
             return new UserMessageViewModel()
             {
                 Message = msgData.Message,
-                Command = msgData.CmdCommand.ToString(),
+                Command = msgData.Command.ToString(),
                 Status = msgData.Status.ToString(),
                 MessageTime = msgData.MessageTime.ToShortTimeString(),
                 UserName = userName,
             };
         }
 
-        private void AddErrorMessage(string message)
+        private void AddSystemMessage(string message)
         {
             var msg = new UserMessageViewModel
             {
@@ -291,6 +278,9 @@ namespace SocketsChat_WPF
         }
 
     }
+
+
+#region Commands
 
     public class SendCommand : ICommand
     {
@@ -338,7 +328,7 @@ namespace SocketsChat_WPF
         public Action ConnectAction;
 
 
-        public void OnAddressChanged()
+        public void OnConnectOptionsChanged()
         {
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -354,4 +344,5 @@ namespace SocketsChat_WPF
 
         public event EventHandler CanExecuteChanged;
     }
+#endregion
 }

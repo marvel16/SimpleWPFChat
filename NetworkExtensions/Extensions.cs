@@ -15,6 +15,14 @@ using System.Threading.Tasks;
 namespace CustomNetworkExtensions
 {
 
+    public enum Command
+    {
+        Message,
+        Login,
+        Logout,
+        List,
+        ChangeName
+    }
 
     [Serializable]
     public class MessageData
@@ -26,7 +34,7 @@ namespace CustomNetworkExtensions
         /// <summary>
         /// client-server Commands
         /// </summary>
-        public Command CmdCommand { get; set; }
+        public Command Command { get; set; }
 
         /// <summary>
         /// Chat message
@@ -47,22 +55,7 @@ namespace CustomNetworkExtensions
             Online,
         }
 
-        public enum Command
-        {
-            //Send a text message to all chat clients     
-            Message,
-            //Log into the server
-            Login,
-            //Logout of the server
-            Logout,
-            //Get a list of users in the chat room from the server
-            List,
-            ChangeName
-        }
-
         public bool Error { get; set; }
-
-
     }
 
     public class User

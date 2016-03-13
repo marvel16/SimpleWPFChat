@@ -1,30 +1,61 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Xml.Linq;
+using NetworkExtensions;
 
 namespace SocketsChat_WPF
 {
-    public class UserOptionsViewModel : BaseViewModel
+    public class UserOptionsViewModel : ViewModelBase
     {
         public SaveOptionsCmd SaveCmd { get; } = new SaveOptionsCmd();
 
-        public Options _opts = new Options();
+        public Options Opts;
 
         public string UserName
         {
-            get { return _opts.UserName; }
+            get { return Opts.UserName; }
             set
             {
-                if (_opts.UserName == value)
+                if (Opts.UserName == value)
                     return;
-                _opts.UserName = value;
+                Opts.UserName = value;
                 OnPropertyChanged();
             }
         }
 
+        public string Ip
+        {
+            get { return Opts.Ip; }
+            set
+            {
+                if (Opts.Ip == value)
+                    return;
+                Opts.Ip = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Port
+        {
+            get { return Opts.Port; }
+            set
+            {
+                if (Opts.Port == value)
+                    return;
+                Opts.Port = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public UserOptionsViewModel(Options opts)
+        {
+            Opts = opts;
+        }
     }
 
     public class SaveOptionsCmd : ICommand

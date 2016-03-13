@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
+using System.Net.Configuration;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -15,31 +16,17 @@ namespace SocketsChat_WPF
 {
     public class Client
     {
-        public Guid UserGuid { get; set; }
+        public Guid UserId { get; private set; }
         public bool IsConnected => _client.Connected;
         public event Action<MessageData> MessageReceived;
         public event Action<string,string> UserNameChanged;
-        public event Action<Dictionary<string,string>> UserListReceived;
         public event Action OnLogin;
         private TcpClient _client = new TcpClient();
         private NetworkStream Stream => _client?.GetStream();
-        private Dictionary<string, string> UserNameDictionary = new Dictionary<string, string>();
 
+        public Dictionary<string, string> UserNameDictionary { get; private set; } = new Dictionary<string, string>();
 
-
-        private string _userName;
-        public string UserName
-        {
-            get { return _userName; }
-            set
-            {
-                if (value == _userName)
-                    return;
-                string oldValue = _userName;
-                _userName = value;
-                UserNameChanged?.Invoke(oldValue, _userName);
-            }
-        }
+        const char _separator = (char)3;
 
 
         public async Task Connect(string ip, int port)
@@ -57,19 +44,18 @@ namespace SocketsChat_WPF
 
         void ProcessMessage(MessageData msg)
         {
-            switch (msg.CmdCommand)
+            switch (msg.Command)
             {
-                case MessageData.Command.Login:
+                case Command.Login:
                     OnUserLogin(msg);
-                    MessageReceived?.Invoke(msg);
                     break;
-                case MessageData.Command.ChangeName:
+                case Command.ChangeName:
                     ProcessChangeName(msg);
                     break;
-                case MessageData.Command.Message:
+                case Command.Message:
                     MessageReceived?.Invoke(msg);
                     break;
-                case MessageData.Command.List:
+                case Command.List:
                     OnUserListReceived(msg.Message);
                     break;
                 default:
@@ -80,17 +66,20 @@ namespace SocketsChat_WPF
 
         private void OnUserLogin(MessageData msg)
         {
-            UserGuid = msg.Id;
-            UserName = msg.Message;
+            UserId = msg.Id;
+            OnLogin?.Invoke();
         }
 
         public void ChangeUserNameRequest(string newName)
         {
+            if (!IsConnected)
+                return;
+
             var msg = new MessageData
             {
-                Id = UserGuid,
+                Id = UserId,
                 Message = newName,
-                CmdCommand = MessageData.Command.ChangeName,
+                Command = Command.ChangeName,
                 MessageTime = DateTime.Now,
             };
             Stream.WriteMessageAsync(msg);
@@ -98,19 +87,28 @@ namespace SocketsChat_WPF
 
         private void OnUserListReceived(string userList)
         {
-            UserNameDictionary = userList.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(entry => entry.Split('=')).ToDictionary(entry => entry[0], entry => entry[1]);
-            UserListReceived?.Invoke(UserNameDictionary);
+            UserNameDictionary = userList.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(entry => entry.Split(_separator)).ToDictionary(entry => entry[0], entry => entry[1]);
         }
 
         private void ProcessChangeName(MessageData msg)
         {
-            UserName = msg.Error ? UserName : msg.Message;
+            if (msg.Error)
+            {
+                MessageReceived?.Invoke(msg);
+                return;
+            }
+
+            var entry = msg.Message.Split(_separator);
+            var oldName = entry[0];
+            var newName = entry[1];
+
+            var id = UserNameDictionary.FirstOrDefault(user => user.Value == oldName).Key;
+            if (id != null)
+                UserNameDictionary[id] = newName;
+
+            UserNameChanged?.Invoke(oldName, newName);
         }
 
-        public void Close()
-        {
-            Stream.WriteMessageAsync(new MessageData {CmdCommand = MessageData.Command.Logout, Id = UserGuid });
-        }
 
         private async Task ReadMessageLoop()
         {
@@ -126,5 +124,9 @@ namespace SocketsChat_WPF
             Stream.WriteMessageAsync(message);
         }
 
+        public void Close()
+        {
+            Stream.WriteMessageAsync(new MessageData {Command = Command.Logout, Id = UserId });
+        }
     }
 }

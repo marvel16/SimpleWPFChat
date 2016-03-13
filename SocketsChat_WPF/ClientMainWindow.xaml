@@ -6,28 +6,23 @@
         xmlns:socketsChatWpf="clr-namespace:SocketsChat_WPF"
 
         mc:Ignorable="d"
-        Title="ClientMainWindow"  Height="340" Width="528"
+        Title="Client"  Height="340" Width="528"
         MinWidth="528" MinHeight="340">
     <Grid>
         <DockPanel LastChildFill="True">
-            <WrapPanel Margin="4" DockPanel.Dock="Top" Height="35">
-                <Label Margin="4" Content="IP:"/>
-                <TextBox Margin="6" x:Name="IpTextBox" Width="106" FontSize="13.333" Text="{Binding Ip, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"/>
-                <Label Margin="4" Content="Port:"/>
-                <TextBox Margin="6" x:Name="PortTextBox" Width="77" FontSize="13.333" Text="{Binding Port, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"/>
-                <Button x:Name="ConnectButton"
-                        Margin="10 4 4 4"
+            <DockPanel Margin="8,4,8,4" DockPanel.Dock="Top" Height="40">
+                <Button Margin="4" HorizontalAlignment="Right"
+                	Width="75"
+                	Background="#FF8EBBD1"
+                	Content="Options"
+                	Command="{Binding UserOptionsCmd}"/>
+
+                <Button Margin="4" HorizontalAlignment="Right" 
                         Width="75"
                         Background="#FF8EBBD1"
                         Content="Connect"
-                        Command="{Binding ConnectCmd}"
-                        />
-                <Button Margin="50 4 4 4"
-                        Width="50"
-                        Background="#FF8EBBD1"
-                        Content="Options"
-                        Command="{Binding UserOptionsCmd}"/>
-            </WrapPanel>
+                        Command="{Binding ConnectCmd}"/>
+            </DockPanel>
             <DockPanel Margin="4" DockPanel.Dock="Bottom" >
                 <Button x:Name="SendButton"
                         DockPanel.Dock="Right"

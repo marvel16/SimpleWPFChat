@@ -48,9 +48,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NetworkExtensions\NetworkExtensions.csproj">
+    <ProjectReference Include="..\NetworkExtensions\NetworkCommon.csproj">
       <Project>{a07649bb-2358-4466-9168-91b591f87c93}</Project>
-      <Name>NetworkExtensions</Name>
+      <Name>NetworkCommon</Name>
     </ProjectReference>
     <ProjectReference Include="..\SocketsChatServer\SocketsChatServer.csproj">
       <Project>{de82cc12-153c-401b-ba06-e0fa1745fc4c}</Project>
