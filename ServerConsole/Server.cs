@@ -41,14 +41,21 @@ namespace ServerConsole
 
         public void Start()
         {
-            try
+            bool listnerStarted = false;
+            do
             {
-                _listener.Start();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+                try
+                {
+                    _listener.Start();
+                    listnerStarted = true;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    Thread.Sleep(1000);
+                }
+            } while (!listnerStarted);
+
             while (true)
             {
                 try
@@ -80,6 +87,7 @@ namespace ServerConsole
             };
 
             WriteMessage(response);
+            TryRemoveDisconnectedClients();
             BroadcastUserListUpdate();
 
             Task t = MessageLoop(client);
@@ -89,7 +97,7 @@ namespace ServerConsole
 
         void ProcessMessage(MessageData msg)
         {
-
+            TryRemoveDisconnectedClients();
             switch (msg.Command)
             {
                 case Command.ChangeName:
@@ -151,6 +159,16 @@ namespace ServerConsole
             user.Client.Close();
         }
 
+        private void TryRemoveDisconnectedClients()
+        {
+            var clientsToRemove = _clients.Where(u => !u.Value.Client.Connected).Select(c => c.Key);
+
+            foreach (var clientKey in clientsToRemove)
+            {
+                User user;
+                _clients.TryRemove(clientKey, out user);
+            }
+        }
         private void WriteLine(string line)
         {
             Console.WriteLine($"[{DateTime.Now}]: {line}");
