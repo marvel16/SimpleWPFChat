@@ -29,9 +29,13 @@
                          TextWrapping="Wrap"
                          Text="{Binding MessageTextToSend, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          AcceptsReturn="True"
-                    HorizontalContentAlignment="Stretch"
-                    Margin="4"
-                    AcceptsTab="True" FontSize="13.333">
+                         HorizontalContentAlignment="Stretch"
+                         Margin="4"
+                         AcceptsTab="True" FontSize="13.333"
+                         AllowDrop="True"
+                         Drop="InputTextbox_OnDrop"
+                         PreviewDragOver="InputTextbox_OnPreviewDragOver"
+                         >
                     <TextBox.InputBindings>
                         <KeyBinding Command="{Binding SendCmd}" Key="Enter" />
                         <KeyBinding Key="Enter" Modifiers="Control" Command="{Binding EnterNewLineCmd}" CommandParameter="{Binding ElementName=InputTextbox}" />
