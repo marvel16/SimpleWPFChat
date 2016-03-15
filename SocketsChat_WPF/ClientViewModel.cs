@@ -1,22 +1,13 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Threading;
 using CustomNetworkExtensions;
-using CustomNetworkExtensions.Annotations;
 using NetworkExtensions;
 
 namespace SocketsChat_WPF
@@ -126,6 +117,7 @@ namespace SocketsChat_WPF
 
         public UserOptionsCommand UserOptionsCmd { get; } = new UserOptionsCommand();
 
+        public SendCommand EnterNewLineCmd { get; } = new SendCommand();
         #endregion
 
         public ClientViewModel(Client client)
@@ -155,6 +147,8 @@ namespace SocketsChat_WPF
 
             SendCmd.CanExecuteAction = () => !string.IsNullOrEmpty(MessageTextToSend) && Connected;
             SendCmd.SendAction = SendMessage;
+
+            EnterNewLineCmd.CanExecuteAction = () => true;
 
             UserOptionsCmd.UserOptionsAction = () =>
             {
@@ -299,7 +293,14 @@ namespace SocketsChat_WPF
 
         public void Execute(object parameter)
         {
-            SendAction();
+            var txtBox = parameter as TextBox;
+            if (txtBox != null)
+            {
+                txtBox.Text += Environment.NewLine;
+                txtBox.CaretIndex = txtBox.Text.Length - 1;
+            }
+
+            SendAction?.Invoke();
         }
 
         public event EventHandler CanExecuteChanged;
