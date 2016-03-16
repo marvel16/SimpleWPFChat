@@ -100,11 +100,12 @@ namespace SocketsChat_WPF
 
         private readonly object _userMessagesLock = new object();
 
-        private UserOptionsViewModel _optionsViewModel;
-
-        private bool Connected => _client.IsConnected;
         private Dictionary<string, string> UserNameDict => _client.UserNameDictionary;
 
+        private bool _connected;
+
+        public bool Connected => _client.Connected;
+                
         private string _messageText;
         public string MessageTextToSend
         {
@@ -115,7 +116,6 @@ namespace SocketsChat_WPF
                     return;
                 _messageText = value;
                 OnPropertyChanged();
-                SendCmd?.OnTextChanged();
             }
         }
 
@@ -131,13 +131,13 @@ namespace SocketsChat_WPF
         public ClientViewModel(Client client)
         {
             LoadConfig();
+            BindingOperations.EnableCollectionSynchronization(UserMessages, _userMessagesLock);
             
             _client = client;
             _client.MessageReceived += OnMessageDataReceived;
             _client.UserNameChanged += OnUserNameChanged;
             _client.OnLogin += OnLogin;
 
-            BindingOperations.EnableCollectionSynchronization(UserMessages, _userMessagesLock);
 
             ConnectCmd.CanExecuteAction = ValidateConnectionInfo;
             ConnectCmd.ConnectAction = async () =>
@@ -153,16 +153,17 @@ namespace SocketsChat_WPF
                 }
             };
 
-            SendCmd.CanExecuteAction = () => !string.IsNullOrEmpty(MessageTextToSend) && Connected;
+            SendCmd.CanExecuteAction = () => !string.IsNullOrEmpty(MessageTextToSend?.TrimEnd()) && Connected;
             SendCmd.SendAction = SendMessage;
+            PropertyChanged += (sender, args) => SendCmd.OnTextChanged();
 
             UserOptionsCmd.UserOptionsAction = () =>
             {
                 var userOptionsDialog = new UserOptions();
-                _optionsViewModel = new UserOptionsViewModel(_options);
-                _optionsViewModel.SaveCmd.SaveOptionsAction = OnUserOptionsSave;
-                _optionsViewModel.SaveCmd.OnClose = () => userOptionsDialog.Close();
-                userOptionsDialog.DataContext = _optionsViewModel;
+                var optionsViewModel = new UserOptionsViewModel(_options);
+                optionsViewModel.SaveCmd.SaveOptionsAction = OnUserOptionsSave;
+                optionsViewModel.SaveCmd.OnClose = () => userOptionsDialog.Close();
+                userOptionsDialog.DataContext = optionsViewModel;
                 userOptionsDialog.Show();
             };
         }
@@ -189,7 +190,7 @@ namespace SocketsChat_WPF
             var msg = new MessageData
             {
                 Id = _client.UserId,
-                Message = MessageTextToSend,
+                Message = MessageTextToSend.TrimEnd(),
                 Command = Command.Message,
                 MessageTime = DateTime.Now,
             };
@@ -204,6 +205,7 @@ namespace SocketsChat_WPF
         private void OnLogin()
         {
             AddSystemMessage("You have joined the chat");
+            this.ConnectCmd.OnConnectOptionsChanged();
             ChangeUserName(_options.UserName);
         }
 
@@ -330,7 +332,7 @@ namespace SocketsChat_WPF
 
         public void OnConnectOptionsChanged()
         {
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            Application.Current.Dispatcher.Invoke(() => CanExecuteChanged?.Invoke(this, EventArgs.Empty));
         }
         public bool CanExecute(object parameter)
         {
