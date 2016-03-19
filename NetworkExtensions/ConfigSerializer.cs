@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 
 namespace NetworkExtensions
 {
-    public class CfgMan
+    public class ConfigSerializer
     {
         private static readonly string CurrentDir = Directory.GetCurrentDirectory();
 

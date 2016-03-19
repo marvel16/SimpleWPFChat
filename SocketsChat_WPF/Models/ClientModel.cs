@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Net;
-using System.Net.Configuration;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
-using CustomNetworkExtensions;
-using CustomNetworkExtensions.Annotations;
+using NetworkExtensions;
+using NetworkExtensions.Entities;
 
-namespace SocketsChat_WPF
+namespace Client.Models
 {
-    public class Client
+    public class ClientModel
     {
         public Guid UserId { get; private set; }
         public bool IsConnected => _client.Connected;
@@ -39,8 +33,6 @@ namespace SocketsChat_WPF
             await ReadMessageLoop();
         }
 
-
-       
 
         void ProcessMessage(MessageData msg)
         {

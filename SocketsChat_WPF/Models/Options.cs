@@ -1,19 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Serialization;
+using Client.ViewModels;
 
-namespace SocketsChat_WPF
+namespace Client.Models
 {
     [XmlInclude(typeof(Options))]
     public class Options : ViewModelBase
     {
         private string _userName = String.Empty;
+        private string _ip = String.Empty;
+        private string _port = String.Empty;
+
         public string UserName
         {
             get { return _userName; }
@@ -26,7 +23,6 @@ namespace SocketsChat_WPF
             }
         }
 
-        private string _ip = String.Empty;
         public string Ip
         {
             get { return _ip; }
@@ -39,7 +35,6 @@ namespace SocketsChat_WPF
             }
         }
 
-        private string _port = String.Empty;
         public string Port
         {
             get { return _port; }
@@ -52,6 +47,4 @@ namespace SocketsChat_WPF
             }
         }
     }
-
-    
 }

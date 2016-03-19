@@ -7,7 +7,7 @@
     <ProjectGuid>{FB5C5C6C-7BC4-41BC-8BA8-768B74E00C06}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SocketsChat_WPF</RootNamespace>
+    <RootNamespace>Client</RootNamespace>
     <AssemblyName>SocketsChat_WPF</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -70,15 +70,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Client.cs" />
+    <Compile Include="Commands\RelayCommand.cs" />
+    <Compile Include="Commands\ManualRelayCommand.cs" />
+    <Compile Include="Commands\TextBoxEnterNewLineCommand.cs" />
+    <Compile Include="Models\ClientModel.cs" />
     <Compile Include="Properties\Annotations.cs" />
-    <Compile Include="ViewModelBase.cs" />
-    <Compile Include="ClientViewModel.cs" />
-    <Compile Include="Options.cs" />
+    <Compile Include="ViewModels\UserMessageViewModel.cs" />
+    <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="ViewModels\ClientViewModel.cs" />
+    <Compile Include="Models\Options.cs" />
     <Compile Include="UserOptions.xaml.cs">
       <DependentUpon>UserOptions.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserOptionsViewModel.cs" />
+    <Compile Include="ViewModels\UserOptionsViewModel.cs" />
     <Page Include="ClientMainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -141,6 +145,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

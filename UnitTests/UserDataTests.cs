@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
-using CustomNetworkExtensions;
+using NetworkExtensions;
+using NetworkExtensions.Entities;
 
 namespace UnitTests
 {
@@ -26,7 +21,6 @@ namespace UnitTests
             {
                 Id = Guid.Empty,
                 Command = Command.Login,
-                Status = MessageData.UserStatus.Offline,
                 Message = "Hello",
                 MessageTime = DateTime.MinValue,
             };
@@ -48,7 +42,6 @@ namespace UnitTests
             {
                 Id = Guid.Empty,
                 Command = Command.Login,
-                Status = MessageData.UserStatus.Offline,
                 Message = null,
                 MessageTime = DateTime.MinValue,
             };

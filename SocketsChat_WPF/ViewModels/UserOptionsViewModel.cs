@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
-using System.Xml.Linq;
-using NetworkExtensions;
+using Client.Commands;
+using Client.Models;
 
-namespace SocketsChat_WPF
+namespace Client.ViewModels
 {
     public class UserOptionsViewModel : ViewModelBase
     {
-        public SaveOptionsCmd SaveCmd { get; } = new SaveOptionsCmd();
+        public RelayCommand SaveCmd { get; }
 
         public Options Opts;
 
@@ -52,28 +47,10 @@ namespace SocketsChat_WPF
             }
         }
 
-        public UserOptionsViewModel(Options opts)
+        public UserOptionsViewModel(Options opts, Action<object> execute)
         {
             Opts = opts;
+            SaveCmd = new RelayCommand(execute);
         }
-    }
-
-    public class SaveOptionsCmd : ICommand
-    {
-        public Action SaveOptionsAction;
-        public Action OnClose;
-
-        public bool CanExecute(object parameter)
-        {
-            return true;
-        }
-
-        public void Execute(object parameter)
-        {
-            SaveOptionsAction();
-            OnClose?.Invoke();
-        }
-
-        public event EventHandler CanExecuteChanged;
     }
 }

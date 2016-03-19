@@ -5,7 +5,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using CustomNetworkExtensions;
+using NetworkExtensions;
+using NetworkExtensions.Entities;
 
 
 namespace ServerConsole

@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Net.Sockets;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Documents;
-using CustomNetworkExtensions;
+﻿using System.Windows;
+using Client.ViewModels;
 
-namespace SocketsChat_WPF
+namespace Client
 {
     /// <summary>
     /// Interaction logic for App.xaml
@@ -20,9 +12,9 @@ namespace SocketsChat_WPF
         {
             ClientMainWindow view = new ClientMainWindow();
 
-            Client client = new Client();
+            Models.ClientModel clientModel = new Models.ClientModel();
 
-            view.DataContext = new ClientViewModel(client);
+            view.DataContext = new ClientViewModel(clientModel);
 
             view.Show();
         }

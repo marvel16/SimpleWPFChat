@@ -56,9 +56,9 @@
       <Project>{de82cc12-153c-401b-ba06-e0fa1745fc4c}</Project>
       <Name>SocketsChatServer</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SocketsChat_WPF\ClientWPF.csproj">
+    <ProjectReference Include="..\SocketsChat_WPF\Client.csproj">
       <Project>{fb5c5c6c-7bc4-41bc-8ba8-768b74e00c06}</Project>
-      <Name>ClientWPF</Name>
+      <Name>Client</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
