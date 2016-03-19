@@ -23,7 +23,7 @@
                 <RowDefinition Height="26" />
             </Grid.RowDefinitions>
             <Label Grid.Column="1" Grid.Row="1" FontSize="13.333" Content="User Name:"/>
-            <TextBox Grid.Column="2" Grid.Row="1" Margin="2" FontSize="13.333" Text="{Binding UserName, Mode=TwoWay}"/>
+            <TextBox Grid.Column="2" Grid.Row="1" Margin="2" FontSize="13.333" Text="{Binding UserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             <Label Grid.Column="1" Grid.Row="2" FontSize="13.333" Content="IP:"/>
             <TextBox Grid.Column="2" Grid.Row="2" Margin="2" FontSize="13.333" Text="{Binding Ip, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             <Label Grid.Column="1" Grid.Row="3" FontSize="13.333" Content="Port:"/>

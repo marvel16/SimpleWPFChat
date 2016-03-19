@@ -10,17 +10,18 @@ namespace Client.Models
 {
     public class ClientModel
     {
+        const char Separator = (char)3;
         public Guid UserId { get; private set; }
-        public bool IsConnected => _client.Connected;
+        public Dictionary<string, string> UserNameDictionary { get; private set; } = new Dictionary<string, string>();
+        public bool Connected => _client.Connected;
         public event Action<MessageData> MessageReceived;
         public event Action<string,string> UserNameChanged;
         public event Action OnLogin;
+        
+
         private TcpClient _client = new TcpClient();
         private NetworkStream Stream => _client?.GetStream();
 
-        public Dictionary<string, string> UserNameDictionary { get; private set; } = new Dictionary<string, string>();
-
-        const char _separator = (char)3;
 
 
         public async Task Connect(string ip, int port)
@@ -33,8 +34,32 @@ namespace Client.Models
             await ReadMessageLoop();
         }
 
+        public void ChangeUserNameRequest(string newName)
+        {
+            if (!Connected)
+                return;
 
-        void ProcessMessage(MessageData msg)
+            var msg = new MessageData
+            {
+                Id = UserId,
+                Message = newName,
+                Command = Command.ChangeName,
+                MessageTime = DateTime.Now,
+            };
+            Stream.WriteMessageAsync(msg);
+        }
+
+        public void WriteMessageAsync(MessageData message)
+        {
+            Stream.WriteMessageAsync(message);
+        }
+
+        public void Close()
+        {
+            Stream.WriteMessageAsync(new MessageData { Command = Command.Logout, Id = UserId });
+        }
+
+        private void ProcessMessage(MessageData msg)
         {
             switch (msg.Command)
             {
@@ -62,24 +87,9 @@ namespace Client.Models
             OnLogin?.Invoke();
         }
 
-        public void ChangeUserNameRequest(string newName)
-        {
-            if (!IsConnected)
-                return;
-
-            var msg = new MessageData
-            {
-                Id = UserId,
-                Message = newName,
-                Command = Command.ChangeName,
-                MessageTime = DateTime.Now,
-            };
-            Stream.WriteMessageAsync(msg);
-        }
-
         private void OnUserListReceived(string userList)
         {
-            UserNameDictionary = userList.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(entry => entry.Split(_separator)).ToDictionary(entry => entry[0], entry => entry[1]);
+            UserNameDictionary = userList.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(entry => entry.Split(Separator)).ToDictionary(entry => entry[0], entry => entry[1]);
         }
 
         private void ProcessChangeName(MessageData msg)
@@ -90,7 +100,7 @@ namespace Client.Models
                 return;
             }
 
-            var entry = msg.Message.Split(_separator);
+            var entry = msg.Message.Split(Separator);
             var oldName = entry[0];
             var newName = entry[1];
 
@@ -104,21 +114,13 @@ namespace Client.Models
 
         private async Task ReadMessageLoop()
         {
-            while (_client.Connected)
+            while (Connected)
             {
                 var message = await Stream.ReadMessageAsync().ConfigureAwait(false);
                 ProcessMessage(message);
             }
         }
 
-        public void WriteMessageAsync(MessageData message)
-        {
-            Stream.WriteMessageAsync(message);
-        }
 
-        public void Close()
-        {
-            Stream.WriteMessageAsync(new MessageData {Command = Command.Logout, Id = UserId });
-        }
     }
 }
