@@ -25,7 +25,7 @@ namespace Client.ViewModels
 
         private UserOptionsViewModel _optionsViewModel;
 
-        private bool Connected => _clientModel.IsConnected;
+        private bool Connected => _clientModel.Connected;
         private Dictionary<string, string> UserNameDict => _clientModel.UserNameDictionary;
 
         private string _messageText;
