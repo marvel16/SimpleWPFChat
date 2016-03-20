@@ -1,7 +1,7 @@
 using System;
 using System.Net.Sockets;
 
-namespace NetworkExtensions.Entities
+namespace NetworkCommon.Entities
 {
     public class User
     {

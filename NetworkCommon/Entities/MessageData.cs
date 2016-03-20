@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NetworkExtensions.Entities
+namespace NetworkCommon.Entities
 {
     [Serializable]
     public class MessageData

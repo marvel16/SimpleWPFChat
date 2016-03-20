@@ -48,7 +48,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NetworkExtensions\NetworkCommon.csproj">
+    <ProjectReference Include="..\NetworkCommon\NetworkCommon.csproj">
       <Project>{a07649bb-2358-4466-9168-91b591f87c93}</Project>
       <Name>NetworkCommon</Name>
     </ProjectReference>
@@ -56,7 +56,7 @@
       <Project>{de82cc12-153c-401b-ba06-e0fa1745fc4c}</Project>
       <Name>SocketsChatServer</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SocketsChat_WPF\Client.csproj">
+    <ProjectReference Include="..\Client\Client.csproj">
       <Project>{fb5c5c6c-7bc4-41bc-8ba8-768b74e00c06}</Project>
       <Name>Client</Name>
     </ProjectReference>

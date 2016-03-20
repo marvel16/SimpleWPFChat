@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace Client.Commands
+namespace MvvmBase.Commands
 {
     /// <summary>
     /// Implementation of RelayCommand
     /// </summary>
     /// <seealso cref="System.Windows.Input.ICommand" />
-    public class RelayCommand : ICommand
+    public class RelayCommandBase : ICommand
     {
         private readonly Predicate<object> _canExecute;
         private readonly Action<object> _execute;
 
 #region Constructors
-        public RelayCommand(Action<object> execute, Predicate<object> canExecute)
+        public RelayCommandBase(Action<object> execute, Predicate<object> canExecute)
         {
             if (execute == null)
                 throw new ArgumentNullException(nameof(execute));
@@ -22,8 +22,7 @@ namespace Client.Commands
             _canExecute = canExecute;
         }
 
-        public RelayCommand(Action<object> execute) : this(execute, null) { }
-#endregion
+        #endregion
 
         public void Execute(object parameter)
         {

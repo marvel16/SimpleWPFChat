@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using NetworkExtensions;
-using NetworkExtensions.Entities;
+using NetworkCommon;
+using NetworkCommon.Entities;
 
 
 namespace ServerConsole
@@ -108,6 +109,12 @@ namespace ServerConsole
                 case Command.List:
                     SendUserList(msg.Id, ReturnUserList);
                     break;
+                case Command.FileTransferRequest:
+                    ProcessFileRequest(msg);
+                    break;
+                case Command.FileTransferResponse:
+                    ProcessFileTransferResponce(msg);
+                    break;
                 case Command.Logout:
                 default:
                     RemoveClient(msg);
@@ -116,7 +123,6 @@ namespace ServerConsole
 
         }
 
-        
 
         private void ChangeName(MessageData msg)
         {
@@ -148,7 +154,24 @@ namespace ServerConsole
             BroadcastMessage(responce);
         }
 
-        
+        private void ProcessFileRequest(MessageData msg)
+        {
+            
+
+            var responce = new MessageData
+            {
+                Id = msg.Id,
+                Command = Command.FileTransferRequest,
+                Message = msg.Message,
+            };
+                
+            BroadcastMessageFromClient(msg);
+        }
+
+        private void ProcessFileTransferResponce(MessageData msg)
+        {
+            BroadcastMessageFromClient(msg);
+        }
 
         private void RemoveClient(MessageData msg)
         {
@@ -196,7 +219,7 @@ namespace ServerConsole
                 WriteMessage(new MessageData
                 {
                     Id = msg.Id,
-                    Command = Command.Message,
+                    Command = msg.Command,
                     Message = msg.Message,
                     MessageTime = DateTime.Now,
                 },

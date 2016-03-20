@@ -4,9 +4,9 @@ using System.IO;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
-using NetworkExtensions.Entities;
+using NetworkCommon.Entities;
 
-namespace NetworkExtensions
+namespace NetworkCommon
 {
     public static class TcpExtensions
     {
@@ -130,6 +130,16 @@ namespace NetworkExtensions
                 bytesLeft -= bytesToRead;
                 iProgress?.Report(1.0 - bytesLeft/(double) fileSize);
             }
+        }
+
+        public static string BytesToString(this long bytes)
+        {
+            string[] suf = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
+            if (bytes == 0)
+                return "0" + suf[0];
+            int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
+            double num = Math.Round(bytes / Math.Pow(1024, place), 1);
+            return num + suf[place];
         }
     }
 }

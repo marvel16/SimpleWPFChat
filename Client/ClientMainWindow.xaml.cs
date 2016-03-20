@@ -1,5 +1,8 @@
-﻿using System.Collections.Specialized;
+﻿using System;
+using System.Collections.Specialized;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Client
 {
@@ -23,6 +26,19 @@ namespace Client
             }
         }
 
+        private void InputTextbox_OnKeyDown(object sender, KeyEventArgs e)
+        {
+            var txtbox = sender as TextBox;
+            if (txtbox == null)
+                return;
+
+            if (e.Key == Key.Enter && (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl))
+            {
+                txtbox.Text += Environment.NewLine;
+                txtbox.CaretIndex = txtbox.Text.Length - 1;
+            }
+        }
+
         private void InputTextbox_OnDrop(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
@@ -42,5 +58,7 @@ namespace Client
             e.Effects = DragDropEffects.Copy;
             e.Handled = true;
         }
+
+        
     }
 }

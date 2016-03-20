@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using NetworkExtensions;
-using NetworkExtensions.Entities;
+using Microsoft.Win32;
+using NetworkCommon;
+using NetworkCommon.Entities;
 
 namespace Client.Models
 {
@@ -16,6 +19,7 @@ namespace Client.Models
         public bool Connected => _client.Connected;
         public event Action<MessageData> MessageReceived;
         public event Action<string,string> UserNameChanged;
+        public event Action<string, string> DownloadFileRequest;
         public event Action OnLogin;
         
 
@@ -49,6 +53,61 @@ namespace Client.Models
             Stream.WriteMessageAsync(msg);
         }
 
+        public void FileTransferRequest(FileInfo fi)
+        {
+            if (!Connected)
+                return;
+
+            var msg = new MessageData
+            {
+                Id = UserId,
+                Message = fi.Name + Separator + fi.Length,
+                Command = Command.FileTransferRequest,
+                MessageTime = DateTime.Now,
+            };
+            Stream.WriteMessageAsync(msg);
+        }
+
+        public void FileTransferResponce(MessageData message)
+        {
+            
+        }
+
+        public void AcceptFileTransferRequest(bool acceptFile, string fileName)
+        {
+            var ip = _client.Client.LocalEndPoint as IPEndPoint;
+
+            if (ip == null)
+                return;
+
+            int port = 50001;
+
+            
+
+            var listner = new TcpListener(IPAddress.Any, 50001);
+            listner.Start();
+
+            string filePath = string.Empty;
+
+            var response = new MessageData
+            {
+                Id = UserId,
+                Command = Command.FileTransferResponse,
+                Error = !acceptFile,
+                Message = acceptFile ? ip.Address.ToString() + Separator + port : string.Empty,
+            };
+
+            Stream.WriteMessageAsync(response);
+
+            if (!acceptFile)
+                return;
+
+            var client = listner.AcceptTcpClient();
+            var fStream = new FileStream(fileName, FileMode.Create);
+
+            Task t = client.GetStream().ReadFileFromNetStreamAsync(fStream);
+        }
+
         public void WriteMessageAsync(MessageData message)
         {
             Stream.WriteMessageAsync(message);
@@ -75,8 +134,42 @@ namespace Client.Models
                 case Command.List:
                     OnUserListReceived(msg.Message);
                     break;
+                case Command.FileTransferRequest:
+                    OnFileTransferRequestReceived(msg);
+                    break;
+                case Command.FileTransferResponse:
+                    OnFileTransferResponse(msg);
+                    break;
                 default:
                     break;
+            }
+
+        }
+
+        private void OnFileTransferRequestReceived(MessageData msg)
+        {
+            string[] fi = msg.Message.Split(Separator);
+            var fileName = fi[0];
+            var fileSize = fi[1];
+
+            DownloadFileRequest?.Invoke(fileName, fileSize);
+        }
+
+        
+
+        private async Task OnFileTransferResponse(MessageData msg)
+        {
+            if(msg.Error || string.IsNullOrEmpty(msg.Message))
+                return;
+
+            string[] info = msg.Message.Split(Separator);
+
+
+            using (var file = new FileStream("masterofpuppets.mp3", FileMode.Open))
+            {
+                var sendstream = new TcpClient(info[0], int.Parse(info[1]));
+                await sendstream.GetStream().WriteFileToNetStreamAsync(file);
+                sendstream.Close();
             }
 
         }
@@ -89,7 +182,9 @@ namespace Client.Models
 
         private void OnUserListReceived(string userList)
         {
-            UserNameDictionary = userList.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(entry => entry.Split(Separator)).ToDictionary(entry => entry[0], entry => entry[1]);
+            UserNameDictionary = userList.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).
+                Select(entry => entry.Split(Separator)).
+                ToDictionary(entry => entry[0], entry => entry[1]);
         }
 
         private void ProcessChangeName(MessageData msg)

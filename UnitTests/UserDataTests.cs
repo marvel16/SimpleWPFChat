@@ -1,7 +1,7 @@
 ﻿using System;
+using NetworkCommon;
+using NetworkCommon.Entities;
 using NUnit.Framework;
-using NetworkExtensions;
-using NetworkExtensions.Entities;
 
 namespace UnitTests
 {

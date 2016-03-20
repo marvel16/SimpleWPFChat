@@ -2,7 +2,7 @@
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace NetworkExtensions
+namespace NetworkCommon
 {
     public class ConfigSerializer
     {

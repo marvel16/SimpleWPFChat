@@ -52,6 +52,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -70,17 +71,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Commands\RelayCommand.cs" />
-    <Compile Include="Commands\ManualRelayCommand.cs" />
-    <Compile Include="Commands\TextBoxEnterNewLineCommand.cs" />
     <Compile Include="Models\ClientModel.cs" />
-    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ViewModels\UserMessageViewModel.cs" />
-    <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="ViewModels\ClientViewModel.cs" />
     <Compile Include="Models\Options.cs" />
-    <Compile Include="UserOptions.xaml.cs">
-      <DependentUpon>UserOptions.xaml</DependentUpon>
+    <Compile Include="Views\Behaviours.cs" />
+    <Compile Include="Views\UserOptionsView.xaml.cs">
+      <DependentUpon>UserOptionsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\UserOptionsViewModel.cs" />
     <Page Include="ClientMainWindow.xaml">
@@ -95,7 +92,11 @@
       <DependentUpon>ClientMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="UserOptions.xaml">
+    <Page Include="DialogServices\DialogViewResourceDictionary.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\UserOptionsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -128,7 +129,11 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NetworkExtensions\NetworkCommon.csproj">
+    <ProjectReference Include="..\MvvmBase\MvvmBase.csproj">
+      <Project>{0660f67f-c76c-4635-98ae-8b67b6d5183a}</Project>
+      <Name>MvvmBase</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NetworkCommon\NetworkCommon.csproj">
       <Project>{a07649bb-2358-4466-9168-91b591f87c93}</Project>
       <Name>NetworkCommon</Name>
     </ProjectReference>

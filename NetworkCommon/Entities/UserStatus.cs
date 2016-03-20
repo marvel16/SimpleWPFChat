@@ -1,4 +1,4 @@
-namespace NetworkExtensions.Entities
+namespace NetworkCommon.Entities
 {
     public enum UserStatus
     {

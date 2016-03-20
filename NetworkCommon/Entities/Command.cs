@@ -1,4 +1,4 @@
-namespace NetworkExtensions.Entities
+namespace NetworkCommon.Entities
 {
     public enum Command
     {
@@ -7,6 +7,7 @@ namespace NetworkExtensions.Entities
         Logout,
         List,
         ChangeName,
-        FileTransfer
+        FileTransferRequest,
+        FileTransferResponse
     }
 }

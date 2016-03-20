@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Windows.Input;
-using Client.Commands;
 using Client.Models;
+using MvvmBase;
+using MvvmBase.Commands;
 
 namespace Client.ViewModels
 {
@@ -9,7 +9,7 @@ namespace Client.ViewModels
     {
         public RelayCommand SaveCmd { get; }
 
-        public Options Opts;
+        private readonly Options Opts;
 
         public string UserName
         {
@@ -47,10 +47,12 @@ namespace Client.ViewModels
             }
         }
 
-        public UserOptionsViewModel(Options opts, Action<object> execute)
+        public UserOptionsViewModel(Options opts, Action execute)
         {
             Opts = opts;
+            execute += PerformClosing;
             SaveCmd = new RelayCommand(execute);
+            Title = "User Options";
         }
     }
 }

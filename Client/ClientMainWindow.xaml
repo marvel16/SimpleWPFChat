@@ -3,6 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+        xmlns:b="clr-namespace:Client.Views"
+        xmlns:entities="clr-namespace:NetworkCommon.Entities;assembly=NetworkCommon"
         mc:Ignorable="d"
         Title="ClientModel"  Height="340" Width="528"
         MinWidth="528" MinHeight="340">
@@ -33,12 +36,12 @@
                          Margin="4"
                          AcceptsTab="True" FontSize="13.333"
                          AllowDrop="True"
-                         Drop="InputTextbox_OnDrop"
+                         KeyDown="InputTextbox_OnKeyDown"
                          PreviewDragOver="InputTextbox_OnPreviewDragOver"
+                         b:Behaviours.DandBehaviour=""
                          >
                     <TextBox.InputBindings>
                         <KeyBinding Command="{Binding SendCmd}" Key="Enter" />
-                        <KeyBinding Key="Enter" Modifiers="Control" Command="{Binding EnterNewLineCmd}" CommandParameter="{Binding ElementName=InputTextbox}" />
                     </TextBox.InputBindings>
                 </TextBox>
             </DockPanel>
@@ -64,3 +67,4 @@
         </DockPanel>
     </Grid>
 </Window>
+

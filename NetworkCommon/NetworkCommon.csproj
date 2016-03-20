@@ -7,7 +7,7 @@
     <ProjectGuid>{A07649BB-2358-4466-9168-91B591F87C93}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NetworkExtensions</RootNamespace>
+    <RootNamespace>NetworkCommon</RootNamespace>
     <AssemblyName>NetworkCommon</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

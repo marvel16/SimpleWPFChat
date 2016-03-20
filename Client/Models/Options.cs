@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Xml.Serialization;
 using Client.ViewModels;
+using MvvmBase;
 
 namespace Client.Models
 {
@@ -14,37 +15,19 @@ namespace Client.Models
         public string UserName
         {
             get { return _userName; }
-            set
-            {
-                if (_userName == value)
-                    return;
-                _userName = value;
-                OnPropertyChanged();
-            }
+            set { Set(ref _userName, value); }
         }
 
         public string Ip
         {
             get { return _ip; }
-            set
-            {
-                if (_ip == value)
-                    return;
-                _ip = value;
-                OnPropertyChanged();
-            }
+            set { Set(ref _ip, value); }
         }
 
         public string Port
         {
             get { return _port; }
-            set
-            {
-                if (_port == value)
-                    return;
-                _port = value;
-                OnPropertyChanged();
-            }
+            set { Set(ref _port, value); }
         }
     }
 }

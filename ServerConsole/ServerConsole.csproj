@@ -50,7 +50,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NetworkExtensions\NetworkCommon.csproj">
+    <ProjectReference Include="..\NetworkCommon\NetworkCommon.csproj">
       <Project>{a07649bb-2358-4466-9168-91b591f87c93}</Project>
       <Name>NetworkCommon</Name>
     </ProjectReference>

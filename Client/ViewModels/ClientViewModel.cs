@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
-using System.Windows.Controls;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using Client.Commands;
 using Client.Models;
-using NetworkExtensions;
-using NetworkExtensions.Entities;
+using MvvmBase;
+using MvvmBase.Commands;
+using MvvmBase.DialogServices;
+using NetworkCommon;
+using NetworkCommon.Entities;
 
 namespace Client.ViewModels
 {
@@ -23,8 +26,6 @@ namespace Client.ViewModels
 
         private readonly object _userMessagesLock = new object();
 
-        private UserOptionsViewModel _optionsViewModel;
-
         private bool Connected => _clientModel.Connected;
         private Dictionary<string, string> UserNameDict => _clientModel.UserNameDictionary;
 
@@ -34,21 +35,17 @@ namespace Client.ViewModels
             get { return _messageText; }
             set
             {
-                if (value == _messageText)
-                    return;
-                _messageText = value;
-                OnPropertyChanged();
+                Set(ref _messageText, value);
             }
         }
 
        #region Commands
 
-        public ICommand SendCmd { get; }
-        public ManualRelayCommand ConnectCmd { get; }
+        public ICommand SendCmd { get; private set; }
+        public ManualRelayCommand ConnectCmd { get; private set; }
+        public ICommand UserOptionsCmd { get; private set; }
+        public ICommand DragAndDropCmd { get; private set; }
 
-        public ICommand UserOptionsCmd { get; }
-
-        public ICommand EnterNewLineCmd { get; }
         #endregion
 
         public ClientViewModel(ClientModel clientModel)
@@ -58,12 +55,18 @@ namespace Client.ViewModels
             _clientModel = clientModel;
             _clientModel.MessageReceived += OnMessageDataReceived;
             _clientModel.UserNameChanged += OnUserNameChanged;
+            _clientModel.DownloadFileRequest += OnDownloadRequest;
             _clientModel.OnLogin += OnLogin;
 
             BindingOperations.EnableCollectionSynchronization(UserMessages, _userMessagesLock);
 
+            InitCommands();
+        }
+
+        private void InitCommands()
+        {
             ConnectCmd = new ManualRelayCommand(
-                async x =>
+                async () =>
                 {
                     try
                     {
@@ -75,26 +78,25 @@ namespace Client.ViewModels
                         AddSystemMessage("Couldn't connect: " + e.Message);
                     }
                 },
-                x => ValidateConnectionInfo());
+                ValidateConnectionInfo);
 
-            SendCmd = new RelayCommand(
-                x => SendMessage(),
-                x=> !string.IsNullOrWhiteSpace(MessageTextToSend) && Connected);
+            SendCmd = new RelayCommand(SendMessage, x => !string.IsNullOrWhiteSpace(MessageTextToSend) && Connected);
 
-            EnterNewLineCmd = new TextBoxEnterNewLineCommand();
+            UserOptionsCmd = new RelayCommand(() => DialogService.Instance.ShowDialog(new UserOptionsViewModel(_options,OnUserOptionsSave)));
 
-            UserOptionsCmd = new RelayCommand(x =>
-                {
-                    var userOptionsDialog = new UserOptions();
-                    _optionsViewModel = new UserOptionsViewModel(_options, o =>
-                    {
-                        OnUserOptionsSave();
-                        userOptionsDialog.Close();
-                    });
-                    userOptionsDialog.DataContext = _optionsViewModel;
-                    userOptionsDialog.Show();
-                });
-                
+            DragAndDropCmd = new RelayCommand(o =>
+            {
+                IDataObject ido = o as IDataObject;
+
+                string[] files = (string[])ido?.GetData(DataFormats.FileDrop);
+
+                if (files == null || files.Length == 0)
+                    return;
+
+                _clientModel.FileTransferRequest(new FileInfo(files[0]));
+
+            },
+            o => Connected);
         }
 
         private void LoadConfig()
@@ -157,6 +159,27 @@ namespace Client.ViewModels
                 AddSystemMessage(message.Message);
             else
                 UserMessages.Add(ConvertMessageDataToViewModel(message));
+        }
+
+        private void OnDownloadRequest(string fileName, string fileSize)
+        {
+            string formatedSize = long.Parse(fileSize).BytesToString();
+
+            bool result = DialogService.Instance.
+                ShowMessageBox($"Do you want to save file\n{fileName} {formatedSize} ?", "File download dialog", MessageBoxButton.YesNo) == MessageBoxResult.Yes;
+
+            if (result)
+            {
+                var res = DialogService.Instance.SaveFileDialog(fileName);
+                if (string.IsNullOrEmpty(res))
+                    result = false;
+                else
+                {
+                    fileName = res;
+                }
+            }
+
+            _clientModel.AcceptFileTransferRequest(result, fileName);
         }
 
         private void OnUserNameChanged(string oldName, string newName)
