@@ -22,6 +22,8 @@ namespace Client.Models
         public event Action<string, string> DownloadFileRequest;
         public event Action OnLogin;
 
+        private TcpListener _fileTcpListener;
+
         private string filePathTransferFile;
 
         private TcpClient _client = new TcpClient();
@@ -72,7 +74,7 @@ namespace Client.Models
         }
 
 
-        public void FileTransferResponce(bool acceptFile, string fileName, IProgress<double> iProgress = null)
+        public async Task FileTransferResponce(bool acceptFile, string fileName, IProgress<double> iProgress = null)
         {
             var ip = _client.Client.LocalEndPoint as IPEndPoint;
 
@@ -81,10 +83,13 @@ namespace Client.Models
 
             int port = 50001;
 
-            
 
-            var listner = new TcpListener(IPAddress.Any, 50001);
-            listner.Start();
+
+            if (_fileTcpListener == null)
+            {
+                _fileTcpListener = new TcpListener(IPAddress.Any, 50001);
+                _fileTcpListener.Start();
+            }
 
             string filePath = string.Empty;
 
@@ -101,10 +106,11 @@ namespace Client.Models
             if (!acceptFile)
                 return;
 
-            var client = listner.AcceptTcpClient();
-            var fStream = new FileStream(fileName, FileMode.Create);
-
-            Task t = client.GetStream().ReadFileFromNetStreamAsync(fStream, iProgress);
+            using(var client = _fileTcpListener.AcceptTcpClient())
+            using (var fStream = new FileStream(fileName, FileMode.Create))
+            {
+                await client.GetStream().ReadFileFromNetStreamAsync(fStream, iProgress);
+            }
         }
 
         public void WriteMessageAsync(MessageData message)
