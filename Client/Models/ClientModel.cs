@@ -72,7 +72,7 @@ namespace Client.Models
         }
 
 
-        public void FileTransferResponce(bool acceptFile, string fileName)
+        public void FileTransferResponce(bool acceptFile, string fileName, IProgress<double> iProgress = null)
         {
             var ip = _client.Client.LocalEndPoint as IPEndPoint;
 
@@ -104,7 +104,7 @@ namespace Client.Models
             var client = listner.AcceptTcpClient();
             var fStream = new FileStream(fileName, FileMode.Create);
 
-            Task t = client.GetStream().ReadFileFromNetStreamAsync(fStream);
+            Task t = client.GetStream().ReadFileFromNetStreamAsync(fStream, iProgress);
         }
 
         public void WriteMessageAsync(MessageData message)
@@ -163,11 +163,12 @@ namespace Client.Models
 
             string[] info = msg.Message.Split(Separator);
 
+            IProgress<double> iProgress = null; // TODO
 
             using (var file = new FileStream(filePathTransferFile, FileMode.Open))
             {
                 var sendstream = new TcpClient(info[0], int.Parse(info[1]));
-                await sendstream.GetStream().WriteFileToNetStreamAsync(file);
+                await sendstream.GetStream().WriteFileToNetStreamAsync(file, iProgress);
                 sendstream.Close();
             }
 

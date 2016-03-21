@@ -168,6 +168,9 @@ namespace Client.ViewModels
             bool result = DialogService.Instance.
                 ShowMessageBox($"Do you want to save file\n{fileName} {formatedSize} ?", "File download dialog", MessageBoxButton.YesNo) == MessageBoxResult.Yes;
 
+
+            IProgress<double> iProgress = null; // TODO
+
             if (result)
             {
                 var res = DialogService.Instance.SaveFileDialog(fileName);
@@ -179,7 +182,7 @@ namespace Client.ViewModels
                 }
             }
 
-            _clientModel.FileTransferResponce(result, fileName);
+            _clientModel.FileTransferResponce(result, fileName, iProgress);
         }
 
         private void OnUserNameChanged(string oldName, string newName)
