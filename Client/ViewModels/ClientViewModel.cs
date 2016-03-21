@@ -179,7 +179,7 @@ namespace Client.ViewModels
                 }
             }
 
-            _clientModel.AcceptFileTransferRequest(result, fileName);
+            _clientModel.FileTransferResponce(result, fileName);
         }
 
         private void OnUserNameChanged(string oldName, string newName)

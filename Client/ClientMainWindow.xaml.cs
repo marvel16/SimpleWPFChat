@@ -32,7 +32,7 @@ namespace Client
             if (txtbox == null)
                 return;
 
-            if (e.Key == Key.Enter && (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl))
+            if (e.Key == Key.Enter && Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
                 txtbox.Text += Environment.NewLine;
                 txtbox.CaretIndex = txtbox.Text.Length - 1;

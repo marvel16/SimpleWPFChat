@@ -21,7 +21,8 @@ namespace Client.Models
         public event Action<string,string> UserNameChanged;
         public event Action<string, string> DownloadFileRequest;
         public event Action OnLogin;
-        
+
+        private string filePathTransferFile;
 
         private TcpClient _client = new TcpClient();
         private NetworkStream Stream => _client?.GetStream();
@@ -58,6 +59,8 @@ namespace Client.Models
             if (!Connected)
                 return;
 
+            filePathTransferFile = fi.FullName;
+
             var msg = new MessageData
             {
                 Id = UserId,
@@ -68,12 +71,8 @@ namespace Client.Models
             Stream.WriteMessageAsync(msg);
         }
 
-        public void FileTransferResponce(MessageData message)
-        {
-            
-        }
 
-        public void AcceptFileTransferRequest(bool acceptFile, string fileName)
+        public void FileTransferResponce(bool acceptFile, string fileName)
         {
             var ip = _client.Client.LocalEndPoint as IPEndPoint;
 
@@ -165,7 +164,7 @@ namespace Client.Models
             string[] info = msg.Message.Split(Separator);
 
 
-            using (var file = new FileStream("masterofpuppets.mp3", FileMode.Open))
+            using (var file = new FileStream(filePathTransferFile, FileMode.Open))
             {
                 var sendstream = new TcpClient(info[0], int.Parse(info[1]));
                 await sendstream.GetStream().WriteFileToNetStreamAsync(file);
