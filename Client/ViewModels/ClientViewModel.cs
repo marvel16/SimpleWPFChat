@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -55,8 +56,9 @@ namespace Client.ViewModels
             _clientModel = clientModel;
             _clientModel.MessageReceived += OnMessageDataReceived;
             _clientModel.UserNameChanged += OnUserNameChanged;
-            _clientModel.DownloadFileRequest += OnDownloadRequest;
+            _clientModel.DownloadFileRequest += async (s1, s2) => await OnDownloadRequest(s1, s2);
             _clientModel.OnLogin += OnLogin;
+            
 
             BindingOperations.EnableCollectionSynchronization(UserMessages, _userMessagesLock);
 
@@ -94,7 +96,8 @@ namespace Client.ViewModels
                     return;
 
                 _clientModel.FileTransferRequest(new FileInfo(files[0]));
-
+                _clientModel.UploadStarted += UpdoadStarted;
+                _clientModel.UploadFinished += CloseUploadDialog;
             },
             o => Connected);
         }
@@ -161,7 +164,7 @@ namespace Client.ViewModels
                 UserMessages.Add(ConvertMessageDataToViewModel(message));
         }
 
-        private void OnDownloadRequest(string fileName, string fileSize)
+        private async Task OnDownloadRequest(string fileName, string fileSize)
         {
             string formatedSize = long.Parse(fileSize).BytesToString();
 
@@ -169,7 +172,7 @@ namespace Client.ViewModels
                 ShowMessageBox($"Do you want to save file\n{fileName} {formatedSize} ?", "File download dialog", MessageBoxButton.YesNo) == MessageBoxResult.Yes;
 
 
-            IProgress<double> iProgress = null; // TODO
+            Action<double> setProgress = null; // TODO
 
             if (result)
             {
@@ -180,9 +183,29 @@ namespace Client.ViewModels
                 {
                     fileName = res;
                 }
+                DialogService.Instance.ShowProgressWindowAsync("Download file", "Downloading...", true);
+
+                setProgress = d => DialogService.Instance.UpdateProgressWindow(d, $"Downloading {(int)(d*100)}/100 %");
             }
 
-            _clientModel.FileTransferResponce(result, fileName, iProgress);
+            await _clientModel.FileTransferResponce(result, fileName, setProgress);
+            DialogService.Instance.CloseProgressWindow();
+        }
+
+        private void UpdoadStarted()
+        {
+            DialogService.Instance.ShowProgressWindowAsync("Uploading...", "0/100");
+            _clientModel.ProgressChanged += SetProgress;
+        }
+
+        private void SetProgress(double d)
+        {
+            DialogService.Instance.UpdateProgressWindow(d, $"Uploading {d*100:0}/100 %");
+        }
+
+        private void CloseUploadDialog()
+        {
+            DialogService.Instance.CloseProgressWindow();
         }
 
         private void OnUserNameChanged(string oldName, string newName)

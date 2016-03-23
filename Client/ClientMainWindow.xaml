@@ -1,50 +1,66 @@
-﻿<Window x:Class="Client.ClientMainWindow"
+﻿<controls:MetroWindow x:Class="Client.ClientMainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
         xmlns:b="clr-namespace:Client.Views"
+        xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
         mc:Ignorable="d"
         Title="ClientModel"  Height="340" Width="528"
-        MinWidth="528" MinHeight="340">
+        MinWidth="528" MinHeight="340"
+        WindowStartupLocation="CenterScreen"
+        Background="#FF323232"
+        WindowStyle="ThreeDBorderWindow"
+        ResizeMode="CanResizeWithGrip">
     <Grid>
         <DockPanel LastChildFill="True">
-            <DockPanel Margin="8,4,8,4" DockPanel.Dock="Top" Height="40">
-                <Button Margin="4" HorizontalAlignment="Right"
-                	Width="75"
-                	Background="#FF8EBBD1"
-                	Content="Options"
-                	Command="{Binding UserOptionsCmd}"/>
-
-                <Button Margin="4" HorizontalAlignment="Right" 
+            <DockPanel Margin="8,10,8,0" DockPanel.Dock="Top" Height="40">
+                <Button Style="{StaticResource AccentedSquareButtonStyle}"
+                        Margin="4"
+                        HorizontalAlignment="Right"
+                	    Width="75"
+                	    Content="Options"
+                	    Command="{Binding UserOptionsCmd}"/>
+                <Button Style="{StaticResource AccentedSquareButtonStyle}"
+                        Margin="4" HorizontalAlignment="Right" 
                         Width="75"
-                        Background="#FF8EBBD1"
                         Content="Connect"
                         Command="{Binding ConnectCmd}"/>
             </DockPanel>
             <DockPanel Margin="4" DockPanel.Dock="Bottom" >
-                <Button x:Name="SendButton"
+                <Button Style="{StaticResource AccentedSquareButtonStyle}"
                         DockPanel.Dock="Right"
-                        Margin="4" Content="Send" Command="{Binding SendCmd}" Background="#FF8EBBD1" Height="52" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="80"/>
-                <TextBox x:Name="InputTextbox"
-                         TextWrapping="Wrap"
-                         Text="{Binding MessageTextToSend, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        Content="Send"
+                        Margin="8"
+                        Command="{Binding SendCmd}"
+                        Width="59"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Right" Height="72">
+                </Button>
+                <TextBox TextWrapping="Wrap"
                          AcceptsReturn="True"
                          HorizontalContentAlignment="Stretch"
-                         Margin="4"
+                         controls:TextBoxHelper.ClearTextButton="True"
+                         controls:TextBoxHelper.Watermark="Type a message here"
+                         Margin="8,8,4,8"
+                         Height="75"
                          AcceptsTab="True" FontSize="13.333"
                          AllowDrop="True"
                          KeyDown="InputTextbox_OnKeyDown"
                          PreviewDragOver="InputTextbox_OnPreviewDragOver"
                          b:Behaviours.DandBehaviour="{Binding DragAndDropCmd}"
+                         Text="{Binding MessageTextToSend, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          >
                     <TextBox.InputBindings>
                         <KeyBinding Command="{Binding SendCmd}" Key="Enter" />
                     </TextBox.InputBindings>
                 </TextBox>
             </DockPanel>
-            <ListView x:Name="messageBox" IsSynchronizedWithCurrentItem="True" Margin="8,4,8,4" ItemsSource="{Binding Path=UserMessages, Mode=OneWay}">
+            <ListView x:Name="MessageBox"
+                      IsSynchronizedWithCurrentItem="True"
+                      Margin="12,8,12,4"
+                      ItemsSource="{Binding Path=UserMessages, Mode=OneWay}"
+                      >
                 <ListView.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="Remove" Command="{Binding ChangeUserNameCmd}"/>
@@ -65,5 +81,7 @@
 
         </DockPanel>
     </Grid>
-</Window>
+</controls:MetroWindow>
+
+
 

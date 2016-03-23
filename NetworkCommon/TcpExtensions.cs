@@ -77,7 +77,7 @@ namespace NetworkCommon
         }
 
         public static async Task WriteFileToNetStreamAsync(this NetworkStream netStream, FileStream fstream,
-            IProgress<double> iProgress = null)
+            Action<double> getProgress)
         {
             if (netStream == null)
                 throw new ArgumentNullException(nameof(netStream));
@@ -100,12 +100,12 @@ namespace NetworkCommon
             {
                 await netStream.WriteAsync(buffer, 0, bytesRead);
                 totalRead += bytesRead;
-                iProgress?.Report(totalRead/fileSize);
+                getProgress?.Invoke(totalRead/fileSize);
             }
         }
 
         public static async Task ReadFileFromNetStreamAsync(this NetworkStream netStream, FileStream fstream,
-            IProgress<double> iProgress = null)
+            Action<double> setProgress)
         {
             if (netStream == null)
                 throw new ArgumentNullException(nameof(netStream));
@@ -128,7 +128,7 @@ namespace NetworkCommon
                 byte[] buffer = await netStream.ReadFromStreamAsync(bytesToRead);
                 fstream.Write(buffer, 0, buffer.Length);
                 bytesLeft -= bytesToRead;
-                iProgress?.Report(1.0 - bytesLeft/(double) fileSize);
+                setProgress?.Invoke(1.0 - bytesLeft/(double) fileSize);
             }
         }
 
@@ -139,7 +139,7 @@ namespace NetworkCommon
                 return "0" + suf[0];
             int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
             double num = Math.Round(bytes / Math.Pow(1024, place), 1);
-            return num + suf[place];
+            return num + " " + suf[place];
         }
     }
 }

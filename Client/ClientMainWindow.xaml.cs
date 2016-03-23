@@ -3,18 +3,19 @@ using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using MahApps.Metro.Controls;
 
 namespace Client
 {
     /// <summary>
     /// Interaction logic for ClientMainWindow.xaml
     /// </summary>
-    public partial class ClientMainWindow : Window
+    public partial class ClientMainWindow : MetroWindow
     {
         public ClientMainWindow()
         {
             InitializeComponent();
-            ((INotifyCollectionChanged) messageBox.Items).CollectionChanged += ListView_CollectionChanged;
+            ((INotifyCollectionChanged)MessageBox.Items).CollectionChanged += ListView_CollectionChanged;
         }
 
         private void ListView_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -22,7 +23,7 @@ namespace Client
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
                 // scroll the new item into view   
-                messageBox.ScrollIntoView(e.NewItems[0]);
+                MessageBox.ScrollIntoView(e.NewItems[0]);
             }
         }
 
@@ -59,6 +60,6 @@ namespace Client
             e.Handled = true;
         }
 
-        
+
     }
 }

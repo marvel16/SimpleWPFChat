@@ -52,7 +52,7 @@ namespace Client.ViewModels
             Opts = opts;
             execute += PerformClosing;
             SaveCmd = new RelayCommand(execute);
-            Title = "User Options";
+            Title = "Options";
         }
     }
 }

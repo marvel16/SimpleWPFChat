@@ -3,8 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        mc:Ignorable="d" Height="160" Width="330"
-             MinHeight="160" MinWidth="330"
+             xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+             mc:Ignorable="d" Height="181" Width="330"
+             MinHeight="180" MinWidth="330"
+             Background="#FF323232"
              >
     <DockPanel LastChildFill="True">
         <Grid>
@@ -15,26 +17,49 @@
                 <ColumnDefinition Width="10"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="10" />
-                <RowDefinition Height="26" />
-                <RowDefinition Height="26" />
-                <RowDefinition Height="26" />
-                <RowDefinition Height="26" />
+                <RowDefinition Height="15" />
+                <RowDefinition Height="28" />
+                <RowDefinition Height="28" />
+                <RowDefinition Height="28" />
+                <RowDefinition Height="28" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Label Grid.Column="1" Grid.Row="1" FontSize="13.333" Content="User Name:"/>
-            <TextBox Grid.Column="2" Grid.Row="1" Margin="2" FontSize="13.333" Text="{Binding UserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-            <Label Grid.Column="1" Grid.Row="2" FontSize="13.333" Content="IP:"/>
-            <TextBox Grid.Column="2" Grid.Row="2" Margin="2" FontSize="13.333" Text="{Binding Ip, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-            <Label Grid.Column="1" Grid.Row="3" FontSize="13.333" Content="Port:"/>
-            <TextBox Grid.Column="2" Grid.Row="3" Margin="2" FontSize="13.333" Text="{Binding Port, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            <Label Grid.Column="1" Grid.Row="1" FontSize="13.333" Foreground="White" Content="User Name:"/>
+            <TextBox Grid.Column="2" Grid.Row="1" 
+                     Margin="2"
+                     FontSize="13.333"
+                     Text="{Binding UserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     controls:TextBoxHelper.ClearTextButton="True"
+                     controls:TextBoxHelper.Watermark="Enter your user name"
+                     />
+            <Label Grid.Column="1" Grid.Row="2" FontSize="13.333" Foreground="White" Content="IP:"/>
+            <TextBox Grid.Column="2" Grid.Row="2"
+                     Margin="2"
+                     FontSize="13.333"
+                     Text="{Binding Ip, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     controls:TextBoxHelper.ClearTextButton="True"
+                     controls:TextBoxHelper.Watermark="Enter server IP address"
+                     />
+            <Label Grid.Column="1" Grid.Row="3" FontSize="13.333" Foreground="White" Content="Port:"/>
+            <TextBox Grid.Column="2" Grid.Row="3"
+                     Margin="2"
+                     FontSize="13.333"
+                     Text="{Binding Port, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     controls:TextBoxHelper.ClearTextButton="True"
+                     controls:TextBoxHelper.Watermark="Enter server port"
+                     />
             <StackPanel Grid.Column="2" Grid.Row="5" Height="40" DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Margin="5" Padding="20,0,20,0"
+                <Button Style="{StaticResource AccentedSquareButtonStyle}"
+                        Margin="5"
+                        Padding="20,0,20,0"
                         Content="Save"
                         IsCancel="False"
                         Command="{Binding SaveCmd}">
                 </Button>
-                <Button Margin="5" Padding="20,0,20,0" Command="{Binding CloseCmd}"
+                <Button Style="{StaticResource AccentedSquareButtonStyle}"
+                        Margin="5"
+                        Padding="20,0,20,0"
+                        Command="{Binding CloseCmd}"
                         Content="Cancel"
                         IsCancel="True"/>
             </StackPanel>

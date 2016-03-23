@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using Microsoft.Win32;
 using NetworkCommon;
 using NetworkCommon.Entities;
 
@@ -20,6 +19,9 @@ namespace Client.Models
         public event Action<MessageData> MessageReceived;
         public event Action<string,string> UserNameChanged;
         public event Action<string, string> DownloadFileRequest;
+        public event Action UploadStarted;
+        public event Action UploadFinished;
+        public event Action<double> ProgressChanged;
         public event Action OnLogin;
 
         private TcpListener _fileTcpListener;
@@ -74,7 +76,7 @@ namespace Client.Models
         }
 
 
-        public async Task FileTransferResponce(bool acceptFile, string fileName, IProgress<double> iProgress = null)
+        public async Task FileTransferResponce(bool acceptFile, string fileName, Action<double> setProgress = null)
         {
             var ip = _client.Client.LocalEndPoint as IPEndPoint;
 
@@ -90,8 +92,6 @@ namespace Client.Models
                 _fileTcpListener = new TcpListener(IPAddress.Any, 50001);
                 _fileTcpListener.Start();
             }
-
-            string filePath = string.Empty;
 
             var response = new MessageData
             {
@@ -109,7 +109,7 @@ namespace Client.Models
             using(var client = _fileTcpListener.AcceptTcpClient())
             using (var fStream = new FileStream(fileName, FileMode.Create))
             {
-                await client.GetStream().ReadFileFromNetStreamAsync(fStream, iProgress);
+                await client.GetStream().ReadFileFromNetStreamAsync(fStream, setProgress);
             }
         }
 
@@ -162,20 +162,22 @@ namespace Client.Models
 
         
 
-        private async Task OnFileTransferResponse(MessageData msg)
+        private async void OnFileTransferResponse(MessageData msg)
         {
             if(msg.Error || string.IsNullOrEmpty(msg.Message))
                 return;
 
             string[] info = msg.Message.Split(Separator);
 
-            IProgress<double> iProgress = null; // TODO
+            UploadStarted?.Invoke();
+            Action<double> getProgress = d => ProgressChanged?.Invoke(d);
 
-            using (var file = new FileStream(filePathTransferFile, FileMode.Open))
+            using (var file = new FileStream(filePathTransferFile, FileMode.Open, FileAccess.Read))
             {
                 var sendstream = new TcpClient(info[0], int.Parse(info[1]));
-                await sendstream.GetStream().WriteFileToNetStreamAsync(file, iProgress);
+                await sendstream.GetStream().WriteFileToNetStreamAsync(file, getProgress);
                 sendstream.Close();
+                UploadFinished?.Invoke();
             }
 
         }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Windows;
-using System.Windows.Forms;
+using System.Windows.Threading;
+using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using MvvmBase.Commands;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
@@ -11,6 +13,8 @@ namespace MvvmBase.DialogServices
     public class DialogService : IDialogService
     {
         private static IDialogService instance = new DialogService();
+
+        ProgressDialogController controller { get; set; }
 
         public static IDialogService Instance
         {
@@ -61,6 +65,33 @@ namespace MvvmBase.DialogServices
         public MessageBoxResult ShowMessageBox(string content, string title, MessageBoxButton buttons)
         {
             return MessageBox.Show(content, title, buttons);
+        }
+
+
+        public void ShowProgressWindowAsync(string title, string message, bool isCancelable = false)
+        {
+            Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                MetroWindow mainWindow = (MetroWindow)Application.Current.MainWindow;
+                controller = await mainWindow.ShowProgressAsync(title, message, isCancelable);
+            });
+        }
+
+        public void UpdateProgressWindow(double progressValue, string message)
+        {
+            if (controller != null)
+            {
+                controller.SetProgress(progressValue);
+                controller.SetMessage(message);
+            }
+        }
+
+        public async void CloseProgressWindow()
+        {
+            if (controller != null)
+            {
+                await controller.CloseAsync();
+            }
         }
     }
 }

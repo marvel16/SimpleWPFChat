@@ -1,12 +1,17 @@
-﻿<Window x:Class="MvvmBase.DialogServices.DialogView"
+﻿<controls:MetroWindow x:Class="MvvmBase.DialogServices.DialogView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
         mc:Ignorable="d"
         Title="DialogView" 
         Height="300"
         Width="300"
+        WindowStartupLocation="CenterScreen"
+        Background="#FF323232"
+        WindowStyle="ThreeDBorderWindow"
         SizeToContent="WidthAndHeight">
     <ContentControl Content="{Binding}" />
-</Window>
+</controls:MetroWindow>
+
