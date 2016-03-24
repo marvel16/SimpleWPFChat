@@ -56,5 +56,13 @@ namespace UnitTests
             Assert.That(expectedMessage.Command, Is.EqualTo(convertedMessage.Command));
         }
 
+        [Test]
+        public void ChangeNameRequestWithExistingName_ChangeDenied()
+        {
+            
+
+        }
+
+
     }
 }

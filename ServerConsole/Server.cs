@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NetworkCommon;
@@ -16,24 +17,26 @@ namespace ServerConsole
     {
         static void Main(string[] args)
         {
+            Console.OutputEncoding = Encoding.UTF8;
             var server = new Srv();
             server.Start();
         }
 
     }
 
-    class Srv
+    public class Srv
     {
         private readonly TcpListener _listener = new TcpListener(IPAddress.Any, 50000);
-        private ConcurrentDictionary<Guid, User> _clients = new ConcurrentDictionary<Guid, User>();
-        const char _separator = (char)3;
+        public static readonly char Separator = (char)3;
         private object sync = new object();
+
+        public ConcurrentDictionary<Guid, User> UserDictionary { get; } = new ConcurrentDictionary<Guid, User>();
 
         public string ReturnUserList
         {
             get
             {
-                return string.Join(string.Empty, _clients.Select(user => $"{user.Value.Id}{_separator}{user.Value.Name},"));
+                return string.Join(string.Empty, UserDictionary.Select(user => $"{user.Value.Id}{Separator}{user.Value.Name},"));
             }
         }
 
@@ -68,42 +71,20 @@ namespace ServerConsole
             }
         }
 
-        private void AcceptTcpClient()
-        {
-            WriteLine("Waiting for a connection...");
-
-            TcpClient client = _listener.AcceptTcpClient();
-
-            var user = new User(client);
-            _clients.TryAdd(user.Id, user);
-            WriteLine($"New client {user.Name} connected...");
-
-            var response = new MessageData
-            {
-                Id = user.Id,
-                Command = Command.Login,
-                MessageTime = DateTime.Now
-            };
-
-            WriteMessage(response);
-            TryRemoveDisconnectedClients();
-            BroadcastUserListUpdate();
-
-            Task t = MessageLoop(client);
-        }
+        
 
 
 
-        void ProcessMessage(MessageData msg)
+        public void ProcessMessage(MessageData msg)
         {
             TryRemoveDisconnectedClients();
             switch (msg.Command)
             {
                 case Command.ChangeName:
-                    ChangeName(msg);
+                    ChangeNameRequest(msg);
                     break;
                 case Command.Message:
-                    WriteLine($"{_clients[msg.Id].Name}: {msg.Message}");
+                    WriteLine($"{UserDictionary[msg.Id].Name}: {msg.Message}");
                     BroadcastMessageFromClient(msg);
                     break;
                 case Command.List:
@@ -124,9 +105,8 @@ namespace ServerConsole
         }
 
 
-        private void ChangeName(MessageData msg)
+        public void ChangeNameRequest(MessageData msg)
         {
-
             var responce = new MessageData
             {
                 Id = msg.Id,
@@ -134,27 +114,38 @@ namespace ServerConsole
                 MessageTime = DateTime.Now,
             };
 
-            var oldName = _clients[msg.Id].Name;
+            var oldName = UserDictionary[msg.Id].Name;
             var newName = msg.Message;
 
-            bool allowChange = !string.IsNullOrEmpty(msg.Message) && _clients.All(client => client.Value.Name != msg.Message);
-            if (!allowChange)
+            string message = string.Empty;
+            if (string.IsNullOrEmpty(msg.Message))
             {
-                string error = $"Couldn't change name to \"{newName}\" because user with that name already exists.";
-                responce.Error = !allowChange;
-                responce.Message = error;
-                WriteLine($"{oldName}: {error}");
+                message = $"Can't change name to empty string or whitespace";
+            }
+            else if (UserDictionary.All(client => client.Value.Name != msg.Message))
+            {
+                message = $"Couldn't change name to \"{newName}\" because user with that name already exists.";
+            }
+
+            if (string.IsNullOrEmpty(message))
+            {
+                responce.Error = true;
+                responce.Message = message;
+                WriteLine($"{oldName}: {message}");
                 WriteMessage(responce);
                 return;
             }
+            
+            UserDictionary[msg.Id].Name = newName;
+            responce.Message = oldName + Separator + newName;
 
-            _clients[msg.Id].Name = newName;
-            responce.Message = oldName + _separator + newName;
             WriteLine($"User \"{oldName}\" changed name to \"{newName}\".");
             BroadcastMessage(responce);
         }
 
-        private void ProcessFileRequest(MessageData msg)
+        
+
+        public void ProcessFileRequest(MessageData msg)
         {
             
 
@@ -168,6 +159,8 @@ namespace ServerConsole
             BroadcastMessageFromClient(msg);
         }
 
+        
+
         private void ProcessFileTransferResponce(MessageData msg)
         {
             BroadcastMessageFromClient(msg);
@@ -176,21 +169,21 @@ namespace ServerConsole
         private void RemoveClient(MessageData msg)
         {
             User user;
-            _clients.TryRemove(msg.Id, out user);
+            UserDictionary.TryRemove(msg.Id, out user);
             user.Client.Close();
         }
 
         private void TryRemoveDisconnectedClients()
         {
-            var clientsToRemove = _clients.Where(u => !u.Value.Client.Connected).Select(c => c.Key);
+            var clientsToRemove = UserDictionary.Where(u => !u.Value.Client.Connected).Select(c => c.Key);
 
             foreach (var clientKey in clientsToRemove)
             {
                 User user;
-                _clients.TryRemove(clientKey, out user);
+                UserDictionary.TryRemove(clientKey, out user);
             }
         }
-        private void WriteLine(string line)
+        public void WriteLine(string line)
         {
             Console.WriteLine($"[{DateTime.Now}]: {line}");
         }
@@ -209,13 +202,13 @@ namespace ServerConsole
 
         public void WriteMessage(MessageData msg , TcpClient tcpClient = null)
         {
-            var client = tcpClient ?? _clients[msg.Id].Client;
+            var client = tcpClient ?? UserDictionary[msg.Id].Client;
             client.GetStream().WriteMessageAsync(msg);
         }
 
         public void BroadcastMessageFromClient(MessageData msg)
         {
-            foreach (var client in _clients.Where(client => client.Key != msg.Id))
+            foreach (var client in UserDictionary.Where(client => client.Key != msg.Id))
                 WriteMessage(new MessageData
                 {
                     Id = msg.Id,
@@ -228,7 +221,7 @@ namespace ServerConsole
 
         public void BroadcastMessage(MessageData msg)
         {
-            foreach (var client in _clients)
+            foreach (var client in UserDictionary)
                 WriteMessage(new MessageData
                 {
                     Id = msg.Id,
@@ -242,11 +235,11 @@ namespace ServerConsole
         public void BroadcastUserListUpdate()
         {
             var userList = ReturnUserList;
-            foreach (var userId in _clients.Select(entry => entry.Value.Id))
+            foreach (var userId in UserDictionary.Select(entry => entry.Value.Id))
                 SendUserList(userId, userList);
         }
 
-        private void SendUserList(Guid id, string list)
+        public void SendUserList(Guid id, string list)
         {
             var response = new MessageData
             {
@@ -257,6 +250,30 @@ namespace ServerConsole
             };
 
             WriteMessage(response);
+        }
+
+        private void AcceptTcpClient()
+        {
+            WriteLine("Waiting for a connection...");
+
+            TcpClient client = _listener.AcceptTcpClient();
+
+            var user = new User(client);
+            UserDictionary.TryAdd(user.Id, user);
+            WriteLine($"New client {user.Name} connected...");
+
+            var response = new MessageData
+            {
+                Id = user.Id,
+                Command = Command.Login,
+                MessageTime = DateTime.Now
+            };
+
+            WriteMessage(response);
+            TryRemoveDisconnectedClients();
+            BroadcastUserListUpdate();
+
+            Task t = MessageLoop(client);
         }
 
     }
