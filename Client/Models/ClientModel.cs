@@ -12,7 +12,7 @@ namespace Client.Models
 {
     public class ClientModel
     {
-        const char Separator = (char)3;
+        public static readonly char Separator = (char)3;
         public Guid UserId { get; private set; }
         public Dictionary<string, string> UserNameDictionary { get; private set; } = new Dictionary<string, string>();
         public bool Connected => _client.Connected;
@@ -118,12 +118,12 @@ namespace Client.Models
             Stream.WriteMessageAsync(message);
         }
 
-        public void Close()
+        public virtual void Close()
         {
             Stream.WriteMessageAsync(new MessageData { Command = Command.Logout, Id = UserId });
         }
 
-        private void ProcessMessage(MessageData msg)
+        public void ProcessMessage(MessageData msg)
         {
             switch (msg.Command)
             {
@@ -161,7 +161,6 @@ namespace Client.Models
         }
 
         
-
         private async void OnFileTransferResponse(MessageData msg)
         {
             if(msg.Error || string.IsNullOrEmpty(msg.Message))
@@ -179,7 +178,6 @@ namespace Client.Models
                 sendstream.Close();
                 UploadFinished?.Invoke();
             }
-
         }
 
         private void OnUserLogin(MessageData msg)
@@ -187,6 +185,7 @@ namespace Client.Models
             UserId = msg.Id;
             OnLogin?.Invoke();
         }
+
 
         private void OnUserListReceived(string userList)
         {

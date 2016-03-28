@@ -43,6 +43,9 @@
     <Compile Include="Entities\Command.cs" />
     <Compile Include="ConfigSerializer.cs" />
     <Compile Include="Entities\MessageData.cs" />
+    <Compile Include="FileTransferManager.cs" />
+    <Compile Include="Notifier.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TcpExtensions.cs" />
     <Compile Include="Entities\User.cs" />

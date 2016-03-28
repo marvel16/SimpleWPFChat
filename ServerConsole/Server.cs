@@ -27,9 +27,9 @@ namespace ServerConsole
     public class Srv
     {
         private readonly TcpListener _listener = new TcpListener(IPAddress.Any, 50000);
-        public static readonly char Separator = (char)3;
         private object sync = new object();
 
+        public static readonly char Separator = (char)3;
         public ConcurrentDictionary<Guid, User> UserDictionary { get; } = new ConcurrentDictionary<Guid, User>();
 
         public string ReturnUserList
@@ -75,9 +75,13 @@ namespace ServerConsole
 
 
 
-        public void ProcessMessage(MessageData msg)
+        private void ProcessMessage(MessageData msg)
         {
             TryRemoveDisconnectedClients();
+
+            if (!UserDictionary.Keys.Contains(msg.Id))
+                return;
+
             switch (msg.Command)
             {
                 case Command.ChangeName:
@@ -107,13 +111,6 @@ namespace ServerConsole
 
         public void ChangeNameRequest(MessageData msg)
         {
-            var responce = new MessageData
-            {
-                Id = msg.Id,
-                Command = Command.ChangeName,
-                MessageTime = DateTime.Now,
-            };
-
             var oldName = UserDictionary[msg.Id].Name;
             var newName = msg.Message;
 
@@ -122,12 +119,19 @@ namespace ServerConsole
             {
                 message = $"Can't change name to empty string or whitespace";
             }
-            else if (UserDictionary.All(client => client.Value.Name != msg.Message))
+            else if (UserDictionary.Any(client => client.Value.Name == msg.Message))
             {
                 message = $"Couldn't change name to \"{newName}\" because user with that name already exists.";
             }
 
-            if (string.IsNullOrEmpty(message))
+            var responce = new MessageData
+            {
+                Id = msg.Id,
+                Command = Command.ChangeName,
+                MessageTime = DateTime.Now,
+            };
+
+            if (!string.IsNullOrEmpty(message))
             {
                 responce.Error = true;
                 responce.Message = message;
@@ -147,8 +151,6 @@ namespace ServerConsole
 
         public void ProcessFileRequest(MessageData msg)
         {
-            
-
             var responce = new MessageData
             {
                 Id = msg.Id,
@@ -175,12 +177,12 @@ namespace ServerConsole
 
         private void TryRemoveDisconnectedClients()
         {
-            var clientsToRemove = UserDictionary.Where(u => !u.Value.Client.Connected).Select(c => c.Key);
-
-            foreach (var clientKey in clientsToRemove)
+            var disconnectedUsers = UserDictionary.Where(u => !u.Value.Client.Connected).Select(c => c.Key);
+            
+            foreach (var userKey in disconnectedUsers)
             {
                 User user;
-                UserDictionary.TryRemove(clientKey, out user);
+                UserDictionary.TryRemove(userKey, out user);
             }
         }
         public void WriteLine(string line)
@@ -200,7 +202,7 @@ namespace ServerConsole
             }
         }
 
-        public void WriteMessage(MessageData msg , TcpClient tcpClient = null)
+        public virtual void WriteMessage(MessageData msg , TcpClient tcpClient = null)
         {
             var client = tcpClient ?? UserDictionary[msg.Id].Client;
             client.GetStream().WriteMessageAsync(msg);
